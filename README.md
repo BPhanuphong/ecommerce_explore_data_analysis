@@ -142,20 +142,7 @@ df.describe()
 
 
 
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
 
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -391,16 +378,18 @@ Shopee มีทั้งหมด 3 แคมเปญหลักๆ ดัง
 
 ### 1. Mega Sale
 วันที่ วันกับเดือนตรงกัน เช่น 11.11 , 12.12 เป็นต้น
-<img src="./img/mega_sale.jpg" alt= “” width="500" height="300">
 
+<img src="https://user-images.githubusercontent.com/113247700/226548955-c9736eb0-eae5-408c-8a22-8b540f50970a.jpg" alt= “” width="500" height="300">
 
 ### 2. Mid Month Sale
 แคมเปญทุกกลางเดือน จัดทุกวันที่ 15 ของเดือน
-<img src="./img/mid_month.jpg" alt= “” width="500" height="300">
+
+<img src="https://user-images.githubusercontent.com/113247700/226549185-6bc123d0-835f-451d-aafe-55e5e67b15b2.jpg" alt= “” width="500" height="300">
 
 ### 3. Pay Day Sale
 แคมเปญปลายเดือน ส่วนมากจะจัดหลายวันตั้งแต่วันที่ 25-สิ้นเดือน
-<img src="./img/pay_day.jpg" alt= “” width="500" height="300">
+
+<img src="https://user-images.githubusercontent.com/113247700/226549360-91daf89c-dabf-4266-8a37-e995791f5dd0.jpg" alt= “” width="500" height="350">
 
 ทุกเดือนจะทำทั้ง 3 campaign แตกต่างกันที่วันที่ และจะมีร้านค้าการทำ flash sale ร่วมด้วย (Flash sale ไม่จำเป็นต้องทำภายใน 3 campaign นี้แต่สามารถทำได้ตลอดเวลาและทุกๆวัน)
 
@@ -420,19 +409,6 @@ df[['itemid','modelid']]
 
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -597,20 +573,7 @@ df[df['year']=='2022'][['itemid','modelid','ingest_date','day_hour']].sort_value
 
 
 
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
 
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -711,19 +674,6 @@ df[df['year']=='2023'][['itemid','modelid','ingest_date','day_hour']].sort_value
 
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -839,9 +789,9 @@ plt.ylabel('Count row of data', fontsize=15)
 
 
 
+![output_18_1](https://user-images.githubusercontent.com/113247700/226550878-4a295ca1-ed88-463b-a81d-418583a7384f.png)
 
-    
-![png](output_18_1.png)
+
     
 
 
@@ -922,19 +872,6 @@ most_flash_sale
 
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -1044,9 +981,9 @@ plt.ylabel('count transaction of flash sale')
 
 
 
+![output_30_1](https://user-images.githubusercontent.com/113247700/226550835-19494da9-f8eb-45bc-a0d3-f535fe84998a.png)
 
-    
-![png](output_30_1.png)
+
     
 
 
@@ -1145,9 +1082,10 @@ plt.ylabel('Count transaction of flash sale', fontsize=15)
 
 
 
+![output_38_1](https://user-images.githubusercontent.com/113247700/226550753-d90c8605-0057-45dc-bca2-30398894b6d4.png)
 
     
-![png](output_38_1.png)
+
     
 
 
@@ -1189,9 +1127,10 @@ plt.ylabel('Count transaction of flash sale', fontsize=15)
 
 
 
+![output_42_1](https://user-images.githubusercontent.com/113247700/226550714-e670d7cf-2b41-4fde-a59e-ef6b31ec814a.png)
 
     
-![png](output_42_1.png)
+
     
 
 
@@ -1228,9 +1167,9 @@ plt.ylabel('Count transaction of flash sale', fontsize=15)
 
 
 
+![output_44_1](https://user-images.githubusercontent.com/113247700/226550680-cb6bc66c-0ace-4ceb-9720-ef8e86fca238.png)
 
-    
-![png](output_44_1.png)
+
     
 
 
@@ -1265,10 +1204,8 @@ plt.ylabel('Count transaction of flash sale', fontsize=15)
     Text(0, 0.5, 'Count transaction of flash sale')
 
 
+![output_46_1](https://user-images.githubusercontent.com/113247700/226550655-3b744d36-d635-48d0-9dee-a5af414f928f.png)
 
-
-    
-![png](output_46_1.png)
     
 
 
@@ -1359,9 +1296,10 @@ plt.ylabel('Duration time (Hours)', fontsize=15)
 
 
 
+![output_53_1](https://user-images.githubusercontent.com/113247700/226550631-fb8518c5-2357-414f-9709-55ed8e38b9da.png)
 
     
-![png](output_53_1.png)
+
     
 
 
@@ -1424,9 +1362,8 @@ plt.ylabel('Number of transactions', fontsize=15)
 
 
 
-    
-![png](output_58_1.png)
-    
+ 
+![output_58_1](https://user-images.githubusercontent.com/113247700/226550606-3de5425c-5dcb-4331-a87a-02bab47a046f.png)
 
 
 ภาพรวมของการขายแฟลชเป็นที่นิยมในช่วงเวลา 02:00 น. (อาจเริ่มขายแฟลชเซลตั้งแต่เที่ยงคืนหรือ 01.00 น.) รองลงมาคือ 9.00 น., 12.00 น., 14.00 น., 16.00 น., 18.00 น. ตามลำดับ 
@@ -1468,19 +1405,6 @@ df_brand
 
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -1555,8 +1479,8 @@ _ = plt.pie(brand_count, labels = label , autopct=lambda p: '{:.2f}%'.format(p),
 
 
     
-![png](output_63_0.png)
-    
+![output_63_0](https://user-images.githubusercontent.com/113247700/226550429-6ac3ffb8-9909-4811-ba87-96a9bf628cfb.png)
+
 
 
 แบรนด์ Petkit มีจำนวนร้านค้ามากที่สุด (มีการแข่งขันที่สูง) รองลงมาคือ Amazfit 
@@ -1583,19 +1507,6 @@ official
 
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -1705,19 +1616,6 @@ official
 
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -1868,9 +1766,8 @@ plt.legend()
 plt.show()
 ```
 
+![output_71_0](https://user-images.githubusercontent.com/113247700/226550260-57d633ab-7f58-402a-a71b-ffea258d41b4.png)
 
-    
-![png](output_71_0.png)
     
 
 
@@ -1901,19 +1798,6 @@ count_overall_sale_mall
 
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -2003,19 +1887,6 @@ count_overall_sale_not_mall
 
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -2096,9 +1967,8 @@ a2.tick_params(axis='both', labelsize=15)
 ```
 
 
-    
-![png](output_79_0.png)
-    
+
+![output_79_0](https://user-images.githubusercontent.com/113247700/226550121-09fdd931-5df7-4bb5-b834-78119d63b142.f)
 
 
 การเข้าร่วม campaign ทั้ง 3 สามารถบอกได้ดังนี้
@@ -2355,8 +2225,10 @@ plt.ylabel('Number of product sales', fontsize=15)
 
 
     
-![png](output_89_1.png)
-    
+
+![png](https://user-images.githubusercontent.com/113247700/226549977-65648eb0-ef95-42a3-8a7f-28207953facb.png)
+
+
 
 
 ตัด outliner ที่เป็นข้อมูลที่ไม่มีความสำคัญออก เพื่อให้สามารถขยายกราฟให้ใหญ่มากขึ้นได้
@@ -2379,7 +2251,7 @@ _ = plt.xticks(range(0,25,1))
 
 
     
-![png](![output_92_0](https://user-images.githubusercontent.com/113247700/226547290-f87433f2-9483-4988-a764-8812e3c6434d.png))
+![output_92_0](https://user-images.githubusercontent.com/113247700/226547290-f87433f2-9483-4988-a764-8812e3c6434d.png)
     
 
 
@@ -2395,8 +2267,3 @@ _ = plt.xticks(range(0,25,1))
 5. PayDay นิยมทำแฟลชเซลในช่วงเวลากลางวัน 12, 18 ส่วน mega, mid month ทำแฟลชเซลคล้ายๆกัน นิยมทำในช่วงเวลากลางคืน 00:00-02:00
 6. official brand ส่วนมากจะนิยมทำแฟลชเซลในแคมเปญ Mega sale และ PayDay มากกว่า Midmonth
 7. ส่วนลด 8-10% มีผลกับยอดขายมากที่สุด
-
-
-```python
-
-```
