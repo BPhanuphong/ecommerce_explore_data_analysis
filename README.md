@@ -2379,7 +2379,7 @@ _ = plt.xticks(range(0,25,1))
 
 
     
-![png](output_92_0.png)
+![png](![output_92_0](https://user-images.githubusercontent.com/113247700/226547290-f87433f2-9483-4988-a764-8812e3c6434d.png))
     
 
 
