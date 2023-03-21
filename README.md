@@ -1,5 +1,26 @@
-# ecommerce_explore_data_analysis
-This is one of Dads 5001 mini project that will explore data on ecommerce platform 
+# E-commerce-Mini-Project
+
+### ผู้จัดทำ
+#### - 6510400004 Unyawee Phanburananont         
+#### - 6510400003 Phanuphong Siriphongwatana 
+
+### ข้อมูล
+ชุดข้อมูลเป็น Transaction ของข้อมูลสินค้าบนแพลตฟอร์ม E-commerce ที่เก็บเป็นรายชั่วโมง มีข้อมูลเกี่ยวกับ %ส่วนลด, ราคาสินค้า, ยี่ห้อสินค้า, การทำแฟลชเซล(Flash sale), จำนวนสินค้าในคลังสินค้า(Stock) เป็นต้น
+
+ระยะเวลาของข้อมูล: 2022-09 ถึง 2023-03
+
+
+### คำถาม
+
+สำรวจเกี่ยวกับการทำแฟลชเซลของสินค้า  แคมเปญการขาย สินค้าแต่ละเเบรนด์ และการลดราคากับสต็อกสินค้า
+
+1. วันและเวลา 10 อันดับแรกที่มีการทำแฟลชเซลบ่อยที่สุด
+2. เปรียบเทียบ 3 แคมเปญลดราคาสินค้า ว่าแคมเปญไหนมีการทำแฟลชเซลบ่อยที่สุด
+3. PayDay แคมเปญมีระยะเวลาที่จัดแคมเปญหลายวันกว่าแคมเปญอื่นๆ จึงดูเพิ่มว่า ช่วงวันและเวลาไหนที่นิยมทำแฟลชเซล
+4. แต่ละแคมเปญส่วนมากทำแฟลชเซลกี่ชั่วโมงโดยเฉลี่ย
+5. แต่ละแคมเปญมีพฤติกรรมการทำแฟลชเซลช่วงเวลาไหนเท่าไหร่บ้าง
+6. สำรวจแบรนด์สินค้าที่เป็นร้านค้าทางการเทียบกับร้านค้าไม่ทางการว่ามีพฤติกรรมการลดราคาในแต่ละแคมเปญแตกต่างกันหรือไม่
+7. ความสัมพันธ์ของการลดราคากับจำนวนสินค้าที่ขายได้
 
 
 ```python
@@ -362,15 +383,36 @@ df.describe()
 
 
 
-# Understand and prepare Data
+## 3 Type campaign
+
+campaign คือมหกรรมการลดราคาของ platform ที่การให้โค้ดส่วนลดมากมายและการทำ flash sale ของร้านค้า
+
+Shopee มีทั้งหมด 3 แคมเปญหลักๆ ดังนี้
+
+### 1. Mega Sale
+วันที่ วันกับเดือนตรงกัน เช่น 11.11 , 12.12 เป็นต้น
+<img src="./img/mega_sale.jpg" alt= “” width="500" height="300">
+
+
+### 2. Mid Month Sale
+แคมเปญทุกกลางเดือน จัดทุกวันที่ 15 ของเดือน
+<img src="./img/mid_month.jpg" alt= “” width="500" height="300">
+
+### 3. Pay Day Sale
+แคมเปญปลายเดือน ส่วนมากจะจัดหลายวันตั้งแต่วันที่ 25-สิ้นเดือน
+<img src="./img/pay_day.jpg" alt= “” width="500" height="300">
+
+ทุกเดือนจะทำทั้ง 3 campaign แตกต่างกันที่วันที่ และจะมีร้านค้าการทำ flash sale ร่วมด้วย (Flash sale ไม่จำเป็นต้องทำภายใน 3 campaign นี้แต่สามารถทำได้ตลอดเวลาและทุกๆวัน)
+
+# Understand and prepare Data Part
+
+itemid = id ของสินค้าใน 1 url สินค้า
+modelid = id ของตัวเลือกสินค้าใน itemid
+
+itemid มีได้หลาย modelid เพราะ 1 สินค้าสามารถมีได้หลายตัวเลือกสินค้า 
 
 
 ```python
-''' 
-itemid = id of product in 1 link
-modelid = option of product in itemid 
-itemid can have many modelid
-''' 
 df[['itemid','modelid']]
 ```
 
@@ -462,11 +504,34 @@ df[['itemid','modelid']]
 
 
 
-We focusing on flash sale
+จากคำถามเราต้องการวิเคราะห์เกี่ยวกับการทำแฟลชเซลสินค้า เนื่องจาก API ของ Shopee มีการ return ค่าของแฟลชเซลออกมาตาม itemid ทำให้ ทุก modelid จะถูกเหมาะรวมว่าทำแฟลชเซลถึงแม้ modelid นั้นจะไม่ได้มีการทำแฟลชเซลก็ตาม 
+ดังนั้นเราจึงทำการเลือกเฉพาะข้อมูล itemid ที่มีเฉพาะ modelid เดียวมาทำการวิเคราะห์ต่อเท่านั้น
 
-Shopee's API return flash sale flag by itemid.
 
-Modelid that in same itemid will be flag flash sale even through that modelid didn't flash sale, We have to filter itemid that has only 1 modelid.
+```python
+list(df.sort_values(['brand'])['brand'].unique())
+```
+
+
+
+
+    ['Amazfit (อเมซฟิต)',
+     'Baseus(เบซิอัส)',
+     'Ecovacs(อีโคแวคส์)',
+     'Haier(ไฮเออร์)',
+     'Life Space (ไลฟ์สเปซ)',
+     'Mister Robot(มิสเตอร์โรบอต)',
+     'Pando(แพนโด้)',
+     'Papifeed(ปาปิฟีด)',
+     'Petkit(เพ็ทคิต)',
+     'Petkit(เพ็ทคิท)',
+     'Redmi(เรดมี่)',
+     'Roborock(โรโบร็อค)',
+     'Xiaomi(เสี่ยวมี่)',
+     'iRobot(ไอโรบอท)',
+     nan]
+
+
 
 
 ```python
@@ -487,17 +552,16 @@ def extract_date_hour(row):
     date = datetime.strptime(row, '%Y-%m-%d %H:%M:%S')
     return date.strftime('%d-%H')
 
+def extract_year(row):
+    date = datetime.strptime(row, '%Y-%m-%d %H:%M:%S')
+    return date.strftime('%Y')
+
 def extract_mega_sale(row):
     date = datetime.strptime(row, '%Y-%m-%d %H:%M:%S')
     if date.strftime('%m') == date.strftime('%d'):
         return True
     else:
         return False
-    
-def extract_year(row):
-    date = datetime.strptime(row, '%Y-%m-%d %H:%M:%S')
-    return date.strftime('%Y')
-
 ```
 
 
@@ -507,7 +571,7 @@ df['day_hour'] = df['ingest_date'].apply(extract_date_hour)
 df['mega_sale'] = df['ingest_date'].apply(extract_mega_sale)
 ```
 
-Check patterns of data by year
+ตรวจจสอบพฤติกรรมของข้อมูลในแต่ละปี เพื่อดูคุณภาพของข้อมูลก่อนการทำไปวิเคราะห์
 
 
 ```python
@@ -747,23 +811,54 @@ df[df['year']=='2023'][['itemid','modelid','ingest_date','day_hour']].sort_value
 
 
 
-We wil drop row that has value year=2023 because 2023, each transaction is 3 hours apart. While 2022, the volume of data is higher (96%) and there are transactions every 1 hour.
+จากการดูแยกปี 2022 กับ 2023 จะพบว่า 2022 มี transaction ทุกๆ1 ชั่วโมง ส่วน 2023 จะเป็น transaction ทุกๆ3ชั่วโมง
+ทำให้ข้อมูลปี 2023 อาจจะข้ามช่วงเวลาการทำแฟลชเซลไปอาจจะทำให้ข้อมูลคลาดเคลื่อนกันของทั้ง2ปี
+เราจึงเลือกที่จะตัดข้อมูลของปี 2023 ออกเนื่องจากเราต้องการนำแฟลชเซลมาวิเคราะห์ถึงระยะเวลาและจำนวน trnsasction ที่เกิดขึ้น
 
 
 ```python
-print(len(df),len(df[df['year']!='2023']))
+fig = plt.figure(figsize = (15, 7))
+freq = plt.bar(['All data','After removing 2023'], [len(df),len(df[df['year']!='2023'])], color =['c','green'])
 
+for f in freq:
+    height = f.get_height()
+    plt.annotate(f'{height:.0f}',
+                xy=(f.get_x() + f.get_width() / 2, height/2),
+                xytext=(0, 3),
+                textcoords="offset points",
+                ha='center', va='bottom', fontsize=15,color='white', weight='bold')
+    
+fig.suptitle('Number of data Before and After remove 2023', fontsize=15)
+plt.ylabel('Count row of data', fontsize=15)
+```
+
+
+
+
+    Text(0, 0.5, 'Count row of data')
+
+
+
+
+    
+![png](output_18_1.png)
+    
+
+
+
+```python
 df = df[df['year']!='2023']
 ```
 
-    31873 30679
-    
+## 1.Top 10 flash sale frequency by day_hour
+วันและเวลา 10 อันดับแรกใดที่มีการทำแฟลชเซลบ่อยที่สุด
 
-# Filter only transaction that have flash sale
+#### Filter only transaction that have flash sale
+เตรียมข้อมูลเพื่อวิเคราะห์สินค้าที่ทำแฟลชเซล โดยสินค้าที่มีการทำแฟลชเซล ดูจากคอลัมน์ Flash_sale ที่ค่าไม่ใช่ค่าว่าง
 
 
 ```python
-df['flash_sale'].unique()
+df['flash_sale'].unique()[:10]
 ```
 
 
@@ -778,547 +873,12 @@ df['flash_sale'].unique()
            "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1662663600, 'flash_sale_stock': 50, 'promotionid': 108652700917760, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1662656400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1150000000, 'stock': 34}",
            "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1662663600, 'flash_sale_stock': 30, 'promotionid': 107390517342208, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1662656400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1149000000, 'stock': 6}",
            "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1662663600, 'flash_sale_stock': 100, 'promotionid': 107390517342208, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1662656400, 'promo_overlay_image': 'f85173f31d3776172d6999ad5a8d39e4', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1499000000, 'stock': 63}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1662663600, 'flash_sale_stock': 10, 'promotionid': 674491900713811, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1662656400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1190000000, 'stock': 9}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1662706800, 'flash_sale_stock': 30, 'promotionid': 107393006641152, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1662699600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1075000000, 'stock': 30}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1662706800, 'flash_sale_stock': 40, 'promotionid': 108652770123776, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1662699600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1190000000, 'stock': 40}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1662706800, 'flash_sale_stock': 40, 'promotionid': 108652770123776, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1662699600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1190000000, 'stock': 37}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1662706800, 'flash_sale_stock': 30, 'promotionid': 107393006641152, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1662699600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1075000000, 'stock': 20}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1662721200, 'flash_sale_stock': 100, 'promotionid': 107393545662464, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1662714000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1150000000, 'stock': 100}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1662721200, 'flash_sale_stock': 20, 'promotionid': 107393545662464, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1662714000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1119000000, 'stock': 20}",
-           "{'price_before_discount': 1699000000, 'hidden_price_display': None, 'end_time': 1662721200, 'flash_sale_stock': 30, 'promotionid': 108652864495616, 'lowest_past_price': None, 'promo_images': ['bb637bbcfff75fb6ed60205b09fd0c00'], 'start_time': 1662714000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 849000000, 'stock': 30}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1662721200, 'flash_sale_stock': 100, 'promotionid': 107393545662464, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1662714000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1150000000, 'stock': 97}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1662721200, 'flash_sale_stock': 20, 'promotionid': 107393545662464, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1662714000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1119000000, 'stock': 16}",
-           "{'price_before_discount': 1699000000, 'hidden_price_display': None, 'end_time': 1662721200, 'flash_sale_stock': 30, 'promotionid': 108652864495616, 'lowest_past_price': None, 'promo_images': ['bb637bbcfff75fb6ed60205b09fd0c00'], 'start_time': 1662714000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 849000000, 'stock': 28}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1662732000, 'flash_sale_stock': 300, 'promotionid': 108652877066240, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1662721200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 215000000, 'stock': 300}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1662732000, 'flash_sale_stock': 20, 'promotionid': 108652877066240, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1662721200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 20}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1662732000, 'flash_sale_stock': 20, 'promotionid': 108652877066240, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1662721200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 16}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1662732000, 'flash_sale_stock': 300, 'promotionid': 108652877066240, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1662721200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 215000000, 'stock': 296}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1662732000, 'flash_sale_stock': 20, 'promotionid': 108652877066240, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1662721200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 12}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1662732000, 'flash_sale_stock': 300, 'promotionid': 108652877066240, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1662721200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 215000000, 'stock': 294}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1662742800, 'flash_sale_stock': 20, 'promotionid': 108652891770880, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1662732000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 20}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1662742800, 'flash_sale_stock': 20, 'promotionid': 108652891770880, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1662732000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 17}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1662742800, 'flash_sale_stock': 20, 'promotionid': 108652891770880, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1662732000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 15}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1662958800, 'flash_sale_stock': 40, 'promotionid': 109177605414912, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1662915600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1190000000, 'stock': 40}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1662958800, 'flash_sale_stock': 30, 'promotionid': 109177605414912, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1662915600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 25}",
-           "{'price_before_discount': 1699000000, 'hidden_price_display': None, 'end_time': 1663131600, 'flash_sale_stock': 30, 'promotionid': 109187512373248, 'lowest_past_price': None, 'promo_images': ['bb637bbcfff75fb6ed60205b09fd0c00'], 'start_time': 1663088400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 849000000, 'stock': 28}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1663153200, 'flash_sale_stock': 30, 'promotionid': 111212784549888, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1663131600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 28}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1663182000, 'flash_sale_stock': 30, 'promotionid': 111213965238273, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1663174800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 30}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1663182000, 'flash_sale_stock': 10, 'promotionid': 675611247201107, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1663174800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1050000000, 'stock': 10}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1663182000, 'flash_sale_stock': 300, 'promotionid': 111213965238273, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1663174800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 215000000, 'stock': 300}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1663182000, 'flash_sale_stock': 300, 'promotionid': 111213965238273, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1663174800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 215000000, 'stock': 298}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1663182000, 'flash_sale_stock': 30, 'promotionid': 111213965238273, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1663174800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 27}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1663207200, 'flash_sale_stock': 30, 'promotionid': 111213979914240, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1663182000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1150000000, 'stock': 30}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1663207200, 'flash_sale_stock': 30, 'promotionid': 111213979914240, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1663182000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1190000000, 'stock': 30}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1663207200, 'flash_sale_stock': 30, 'promotionid': 111213979914240, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1663182000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1150000000, 'stock': 29}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1663207200, 'flash_sale_stock': 30, 'promotionid': 111213979914240, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1663182000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1190000000, 'stock': 29}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1663207200, 'flash_sale_stock': 30, 'promotionid': 111213979914240, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1663182000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1190000000, 'stock': 27}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1663225200, 'flash_sale_stock': 20, 'promotionid': 109193044643840, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1663218000, 'promo_overlay_image': '4b6ef2f677ceb5d4aa58709ed81417e5', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1075000000, 'stock': 20}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1663225200, 'flash_sale_stock': 30, 'promotionid': 111214003019777, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1663218000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 30}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1663225200, 'flash_sale_stock': 30, 'promotionid': 111214003019777, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1663218000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 28}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1663225200, 'flash_sale_stock': 20, 'promotionid': 109193044643840, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1663218000, 'promo_overlay_image': '4b6ef2f677ceb5d4aa58709ed81417e5', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1075000000, 'stock': 17}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1663250400, 'flash_sale_stock': 40, 'promotionid': 109193755611136, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1663239600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1029000000, 'stock': 40}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1663250400, 'flash_sale_stock': 20, 'promotionid': 675779440932484, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1663239600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1111100000, 'stock': 20}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1663250400, 'flash_sale_stock': 40, 'promotionid': 109193755611136, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1663239600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1029000000, 'stock': 38}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1663250400, 'flash_sale_stock': 40, 'promotionid': 109193755611136, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1663239600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1029000000, 'stock': 37}",
-           "{'price_before_discount': 2141400000, 'hidden_price_display': None, 'end_time': 1663261200, 'flash_sale_stock': 5, 'promotionid': 675742640078884, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1663250400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1050000000, 'stock': 5}",
-           "{'price_before_discount': None, 'hidden_price_display': None, 'end_time': 1663261200, 'flash_sale_stock': None, 'promotionid': 111214055391233, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1663250400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': None, 'stock': None}",
-           "{'price_before_discount': 1699000000, 'hidden_price_display': None, 'end_time': 1663261200, 'flash_sale_stock': 30, 'promotionid': 111214055391233, 'lowest_past_price': None, 'promo_images': ['bb637bbcfff75fb6ed60205b09fd0c00'], 'start_time': 1663250400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 849000000, 'stock': 30}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1663261200, 'flash_sale_stock': 30, 'promotionid': 111214055391233, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1663250400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 28}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1663261200, 'flash_sale_stock': 30, 'promotionid': 111214055391233, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1663250400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 27}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1663390800, 'flash_sale_stock': 30, 'promotionid': 112249442410497, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1663347600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1190000000, 'stock': 30}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1663390800, 'flash_sale_stock': 30, 'promotionid': 112249442410497, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1663347600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1150000000, 'stock': 29}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1663477200, 'flash_sale_stock': 30, 'promotionid': 111562572636160, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1663434000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1149000000, 'stock': 28}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1663477200, 'flash_sale_stock': 5, 'promotionid': 676094680585043, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1663434000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 5}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1663563600, 'flash_sale_stock': 200, 'promotionid': 111562763530241, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1663520400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 220000000, 'stock': 199}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1663736400, 'flash_sale_stock': 30, 'promotionid': 109922608214017, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1663693200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1149000000, 'stock': 30}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1663736400, 'flash_sale_stock': 20, 'promotionid': 109922608214017, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1663693200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 19}",
-           "{'price_before_discount': 1699000000, 'hidden_price_display': None, 'end_time': 1663941600, 'flash_sale_stock': 30, 'promotionid': 112466149543938, 'lowest_past_price': None, 'promo_images': ['bb637bbcfff75fb6ed60205b09fd0c00'], 'start_time': 1663930800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 849000000, 'stock': 30}",
-           "{'price_before_discount': 2141400000, 'hidden_price_display': None, 'end_time': 1663941600, 'flash_sale_stock': 5, 'promotionid': 677214937222180, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1663930800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1220000000, 'stock': 5}",
-           "{'price_before_discount': 1699000000, 'hidden_price_display': None, 'end_time': 1663941600, 'flash_sale_stock': 30, 'promotionid': 112466149543938, 'lowest_past_price': None, 'promo_images': ['bb637bbcfff75fb6ed60205b09fd0c00'], 'start_time': 1663930800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 849000000, 'stock': 29}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1663995600, 'flash_sale_stock': 100, 'promotionid': 109942241751040, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1663952400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 220000000, 'stock': 100}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1664082000, 'flash_sale_stock': 5, 'promotionid': 677365166733139, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1664038800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 5}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1664082000, 'flash_sale_stock': 20, 'promotionid': 677370118099555, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1664038800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1180000000, 'stock': 20}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1664082000, 'flash_sale_stock': 20, 'promotionid': 677367945464737, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1664038800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1180000000, 'stock': 20}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1664082000, 'flash_sale_stock': 20, 'promotionid': 109943164456960, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1664038800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1119000000, 'stock': 20}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1664082000, 'flash_sale_stock': 20, 'promotionid': 677367945464737, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1664038800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1150000000, 'stock': 20}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1664082000, 'flash_sale_stock': 20, 'promotionid': 677367945464737, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1664038800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1150000000, 'stock': 18}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1664082000, 'flash_sale_stock': 20, 'promotionid': 109943164456960, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1664038800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1119000000, 'stock': 19}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1664082000, 'flash_sale_stock': 20, 'promotionid': 677367945464737, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1664038800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1150000000, 'stock': 17}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1664082000, 'flash_sale_stock': 20, 'promotionid': 677367945464737, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1664038800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1150000000, 'stock': 16}",
-           "{'price_before_discount': 2141400000, 'hidden_price_display': None, 'end_time': 1664103600, 'flash_sale_stock': 5, 'promotionid': 677368981440548, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1664082000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1190000000, 'stock': 5}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1664114400, 'flash_sale_stock': 20, 'promotionid': 109943701315584, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1664103600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 20}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1664114400, 'flash_sale_stock': 20, 'promotionid': 109943701315584, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1664103600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 19}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1664114400, 'flash_sale_stock': 20, 'promotionid': 109943701315584, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1664103600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 18}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1664190000, 'flash_sale_stock': 30, 'promotionid': 111192574230528, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1664168400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1149000000, 'stock': 30}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1664190000, 'flash_sale_stock': 30, 'promotionid': 111192574230528, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1664168400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1149000000, 'stock': 25}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1664190000, 'flash_sale_stock': 30, 'promotionid': 111192574230528, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1664168400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1149000000, 'stock': 24}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1664190000, 'flash_sale_stock': 30, 'promotionid': 111192574230528, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1664168400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1149000000, 'stock': 22}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1664190000, 'flash_sale_stock': 30, 'promotionid': 111192574230528, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1664168400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1149000000, 'stock': 21}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1664254800, 'flash_sale_stock': 30, 'promotionid': 112849005576193, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1664211600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1149000000, 'stock': 30}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1664254800, 'flash_sale_stock': 30, 'promotionid': 112849005576193, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1664211600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1149000000, 'stock': 29}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1664254800, 'flash_sale_stock': 30, 'promotionid': 112849005576193, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1664211600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1149000000, 'stock': 28}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1664254800, 'flash_sale_stock': 30, 'promotionid': 112849005576193, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1664211600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1149000000, 'stock': 27}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1664341200, 'flash_sale_stock': 200, 'promotionid': 113874391293953, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1664298000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 220000000, 'stock': 200}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1664341200, 'flash_sale_stock': 20, 'promotionid': 113874391293953, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1664298000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 16}",
-           "{'price_before_discount': 2141400000, 'hidden_price_display': None, 'end_time': 1664514000, 'flash_sale_stock': 5, 'promotionid': 678097699826724, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1664470800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1190000000, 'stock': 5}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1664535600, 'flash_sale_stock': 20, 'promotionid': 113875194503168, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1664514000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1090000000, 'stock': 20}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1664535600, 'flash_sale_stock': 20, 'promotionid': 113875194503168, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1664514000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1090000000, 'stock': 20}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1664535600, 'flash_sale_stock': 20, 'promotionid': 678466683268707, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1664514000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 20}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1664535600, 'flash_sale_stock': 20, 'promotionid': 113875194503168, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1664514000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1090000000, 'stock': 18}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1664535600, 'flash_sale_stock': 20, 'promotionid': 113875194503168, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1664514000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1090000000, 'stock': 17}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1664535600, 'flash_sale_stock': 20, 'promotionid': 113875194503168, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1664514000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1090000000, 'stock': 18}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1664546400, 'flash_sale_stock': 10, 'promotionid': 678446298909523, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1664535600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1050000000, 'stock': 10}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1664557200, 'flash_sale_stock': 20, 'promotionid': 111380376276993, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1664546400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 20}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1664557200, 'flash_sale_stock': 20, 'promotionid': 111380376276993, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1664546400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 16}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1664557200, 'flash_sale_stock': 20, 'promotionid': 111380376276993, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1664546400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 14}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1664600400, 'flash_sale_stock': 30, 'promotionid': 112293650337792, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1664557200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1149000000, 'stock': 30}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1664600400, 'flash_sale_stock': 30, 'promotionid': 112293650337792, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1664557200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1149000000, 'stock': 29}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1664600400, 'flash_sale_stock': 30, 'promotionid': 112293650337792, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1664557200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1149000000, 'stock': 27}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1664600400, 'flash_sale_stock': 30, 'promotionid': 112293650337792, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1664557200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1149000000, 'stock': 25}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1664632800, 'flash_sale_stock': 20, 'promotionid': 112294363348992, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1664622000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 20}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1664632800, 'flash_sale_stock': 20, 'promotionid': 112294363348992, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1664622000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 18}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1664686800, 'flash_sale_stock': 200, 'promotionid': 114094017671169, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1664643600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 220000000, 'stock': 200}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1664686800, 'flash_sale_stock': 200, 'promotionid': 114094017671169, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1664643600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 220000000, 'stock': 199}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1664708400, 'flash_sale_stock': 20, 'promotionid': 678692519265185, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1664686800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1180000000, 'stock': 20}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1664859600, 'flash_sale_stock': 20, 'promotionid': 112299792879616, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1664816400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 20}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1664859600, 'flash_sale_stock': 30, 'promotionid': 112299792879616, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1664816400, 'promo_overlay_image': '9beb2804cf539d52301662af8f28965e', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1084000000, 'stock': 30}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1664859600, 'flash_sale_stock': 30, 'promotionid': 112299792879616, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1664816400, 'promo_overlay_image': '9beb2804cf539d52301662af8f28965e', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1084000000, 'stock': 26}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1664859600, 'flash_sale_stock': 20, 'promotionid': 112299792879616, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1664816400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 17}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1664859600, 'flash_sale_stock': 30, 'promotionid': 112299792879616, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1664816400, 'promo_overlay_image': '9beb2804cf539d52301662af8f28965e', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1084000000, 'stock': 25}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1664859600, 'flash_sale_stock': 30, 'promotionid': 112299792879616, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1664816400, 'promo_overlay_image': '9beb2804cf539d52301662af8f28965e', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1084000000, 'stock': 24}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1664859600, 'flash_sale_stock': 20, 'promotionid': 112299792879616, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1664816400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 16}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1664859600, 'flash_sale_stock': 30, 'promotionid': 112299792879616, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1664816400, 'promo_overlay_image': '9beb2804cf539d52301662af8f28965e', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1084000000, 'stock': 23}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1664859600, 'flash_sale_stock': 30, 'promotionid': 112299792879616, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1664816400, 'promo_overlay_image': '9beb2804cf539d52301662af8f28965e', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1084000000, 'stock': 20}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1664859600, 'flash_sale_stock': 20, 'promotionid': 112299792879616, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1664816400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 15}",
-           "{'price_before_discount': 2141400000, 'hidden_price_display': None, 'end_time': 1664881200, 'flash_sale_stock': 5, 'promotionid': 679191935004708, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1664859600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1190000000, 'stock': 5}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1664881200, 'flash_sale_stock': 20, 'promotionid': 112301011341314, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1664859600, 'promo_overlay_image': '9beb2804cf539d52301662af8f28965e', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1059000000, 'stock': 20}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1664902800, 'flash_sale_stock': 40, 'promotionid': 112301638406144, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1664892000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1150000000, 'stock': 40}",
-           "{'price_before_discount': 1699000000, 'hidden_price_display': None, 'end_time': 1664902800, 'flash_sale_stock': 30, 'promotionid': 112301638406144, 'lowest_past_price': None, 'promo_images': ['bb637bbcfff75fb6ed60205b09fd0c00'], 'start_time': 1664892000, 'promo_overlay_image': '9beb2804cf539d52301662af8f28965e', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 801000000, 'stock': 30}",
-           "{'price_before_discount': 1699000000, 'hidden_price_display': None, 'end_time': 1664902800, 'flash_sale_stock': 30, 'promotionid': 112301638406144, 'lowest_past_price': None, 'promo_images': ['bb637bbcfff75fb6ed60205b09fd0c00'], 'start_time': 1664892000, 'promo_overlay_image': '9beb2804cf539d52301662af8f28965e', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 801000000, 'stock': 29}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1664902800, 'flash_sale_stock': 40, 'promotionid': 112301638406144, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1664892000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1150000000, 'stock': 39}",
-           "{'price_before_discount': 1699000000, 'hidden_price_display': None, 'end_time': 1664902800, 'flash_sale_stock': 30, 'promotionid': 112301638406144, 'lowest_past_price': None, 'promo_images': ['bb637bbcfff75fb6ed60205b09fd0c00'], 'start_time': 1664892000, 'promo_overlay_image': '9beb2804cf539d52301662af8f28965e', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 801000000, 'stock': 28}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1664902800, 'flash_sale_stock': 40, 'promotionid': 112301638406144, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1664892000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1150000000, 'stock': 38}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1664967600, 'flash_sale_stock': 10, 'promotionid': 679352153236307, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1664946000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 10}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1664978400, 'flash_sale_stock': 20, 'promotionid': 114116190855171, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1664967600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 20}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1664978400, 'flash_sale_stock': 20, 'promotionid': 114116190855171, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1664967600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 18}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1665032400, 'flash_sale_stock': 20, 'promotionid': 112428690120704, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1664989200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1119000000, 'stock': 20}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1665032400, 'flash_sale_stock': 20, 'promotionid': 112428690120704, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1664989200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1119000000, 'stock': 19}",
-           "{'price_before_discount': None, 'hidden_price_display': None, 'end_time': 1665075600, 'flash_sale_stock': None, 'promotionid': 679598237221793, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1665064800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': None, 'stock': None}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1665075600, 'flash_sale_stock': 50, 'promotionid': 679598237221793, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1665064800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1180000000, 'stock': 50}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1665140400, 'flash_sale_stock': 10, 'promotionid': 679713794516819, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1665118800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 10}",
-           "{'price_before_discount': 2141400000, 'hidden_price_display': None, 'end_time': 1665140400, 'flash_sale_stock': 391, 'promotionid': 679715757475876, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1665118800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1190000000, 'stock': 391}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1665140400, 'flash_sale_stock': 20, 'promotionid': 112429755527168, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1665118800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 20}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1665140400, 'flash_sale_stock': 10, 'promotionid': 679713794516819, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1665118800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 9}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1665140400, 'flash_sale_stock': 20, 'promotionid': 112429755527168, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1665118800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 19}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1665140400, 'flash_sale_stock': 20, 'promotionid': 112429755527168, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1665118800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 18}",
-           "{'price_before_discount': 519000000, 'hidden_price_display': None, 'end_time': 1665151200, 'flash_sale_stock': 10, 'promotionid': 679776237193949, 'lowest_past_price': None, 'promo_images': ['865b5c2978670e1d1eb728d08d54c9db'], 'start_time': 1665140400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 329900000, 'stock': 10}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1665151200, 'flash_sale_stock': 20, 'promotionid': 112429946343425, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1665140400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1119000000, 'stock': 20}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1665205200, 'flash_sale_stock': 150, 'promotionid': 114797056393216, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1665162000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 220000000, 'stock': 150}",
-           "{'price_before_discount': 699900000, 'hidden_price_display': None, 'end_time': 1665205200, 'flash_sale_stock': 100, 'promotionid': 114797056393216, 'lowest_past_price': None, 'promo_images': ['77ea1e5671d8853acabaf9cb70778d2d'], 'start_time': 1665162000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 499900000, 'stock': 100}",
-           "{'price_before_discount': 699900000, 'hidden_price_display': None, 'end_time': 1665205200, 'flash_sale_stock': 100, 'promotionid': 114797056393216, 'lowest_past_price': None, 'promo_images': ['77ea1e5671d8853acabaf9cb70778d2d'], 'start_time': 1665162000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 499900000, 'stock': 99}",
-           "{'price_before_discount': 699900000, 'hidden_price_display': None, 'end_time': 1665205200, 'flash_sale_stock': 100, 'promotionid': 114797056393216, 'lowest_past_price': None, 'promo_images': ['77ea1e5671d8853acabaf9cb70778d2d'], 'start_time': 1665162000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 499900000, 'stock': 98}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1665226800, 'flash_sale_stock': 10, 'promotionid': 679544522892397, 'lowest_past_price': None, 'promo_images': ['203d98e69b73681e61b97b669c785f40'], 'start_time': 1665205200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 879000000, 'stock': 10}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1665291600, 'flash_sale_stock': 50, 'promotionid': 114800055316480, 'lowest_past_price': None, 'promo_images': ['416c03d70d90acfda026e6145c0dba4d'], 'start_time': 1665248400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 282000000, 'stock': 49}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1665291600, 'flash_sale_stock': 20, 'promotionid': 112431361912832, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1665248400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 20}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1665291600, 'flash_sale_stock': 50, 'promotionid': 114800055316480, 'lowest_past_price': None, 'promo_images': ['416c03d70d90acfda026e6145c0dba4d'], 'start_time': 1665248400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 282000000, 'stock': 48}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1665291600, 'flash_sale_stock': 50, 'promotionid': 114800055316480, 'lowest_past_price': None, 'promo_images': ['416c03d70d90acfda026e6145c0dba4d'], 'start_time': 1665248400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 282000000, 'stock': 47}",
-           "{'price_before_discount': 999000000, 'hidden_price_display': None, 'end_time': 1665342000, 'flash_sale_stock': 20, 'promotionid': 115216442753024, 'lowest_past_price': None, 'promo_images': ['7e57cbf5900076387da4da298ff931ec'], 'start_time': 1665334800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 659000000, 'stock': 19}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1665342000, 'flash_sale_stock': 100, 'promotionid': 112432211247105, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1665334800, 'promo_overlay_image': 'd2ecb72a3ac6ae096457957f67b79a96', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1499000000, 'stock': 96}",
-           "{'price_before_discount': 199000000, 'hidden_price_display': None, 'end_time': 1665342000, 'flash_sale_stock': 250, 'promotionid': 115216442753024, 'lowest_past_price': None, 'promo_images': ['d64b7f28c0174f976d5f9bc9ba112b2d'], 'start_time': 1665334800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 139900000, 'stock': 249}",
-           "{'price_before_discount': 699900000, 'hidden_price_display': None, 'end_time': 1665342000, 'flash_sale_stock': 400, 'promotionid': 112432211247105, 'lowest_past_price': None, 'promo_images': ['77ea1e5671d8853acabaf9cb70778d2d'], 'start_time': 1665334800, 'promo_overlay_image': 'd2ecb72a3ac6ae096457957f67b79a96', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 459000000, 'stock': 400}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1665342000, 'flash_sale_stock': 50, 'promotionid': 115216442753024, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1665334800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1090000000, 'stock': 48}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1665342000, 'flash_sale_stock': 20, 'promotionid': 112432211247105, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1665334800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1119000000, 'stock': 20}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1665342000, 'flash_sale_stock': 40, 'promotionid': 112432211247105, 'lowest_past_price': None, 'promo_images': ['203d98e69b73681e61b97b669c785f40'], 'start_time': 1665334800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 879000000, 'stock': 40}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1665342000, 'flash_sale_stock': 50, 'promotionid': 115216442753024, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1665334800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1090000000, 'stock': 0}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1665342000, 'flash_sale_stock': 100, 'promotionid': 112432211247105, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1665334800, 'promo_overlay_image': 'd2ecb72a3ac6ae096457957f67b79a96', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1499000000, 'stock': 69}",
-           "{'price_before_discount': 199000000, 'hidden_price_display': None, 'end_time': 1665342000, 'flash_sale_stock': 250, 'promotionid': 115216442753024, 'lowest_past_price': None, 'promo_images': ['d64b7f28c0174f976d5f9bc9ba112b2d'], 'start_time': 1665334800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 139900000, 'stock': 243}",
-           "{'price_before_discount': 999000000, 'hidden_price_display': None, 'end_time': 1665342000, 'flash_sale_stock': 20, 'promotionid': 115216442753024, 'lowest_past_price': None, 'promo_images': ['7e57cbf5900076387da4da298ff931ec'], 'start_time': 1665334800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 659000000, 'stock': 16}",
-           "{'price_before_discount': 699900000, 'hidden_price_display': None, 'end_time': 1665342000, 'flash_sale_stock': 400, 'promotionid': 112432211247105, 'lowest_past_price': None, 'promo_images': ['77ea1e5671d8853acabaf9cb70778d2d'], 'start_time': 1665334800, 'promo_overlay_image': 'd2ecb72a3ac6ae096457957f67b79a96', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 459000000, 'stock': 350}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1665342000, 'flash_sale_stock': 40, 'promotionid': 112432211247105, 'lowest_past_price': None, 'promo_images': ['203d98e69b73681e61b97b669c785f40'], 'start_time': 1665334800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 879000000, 'stock': 38}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1665342000, 'flash_sale_stock': 20, 'promotionid': 112432211247105, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1665334800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1119000000, 'stock': 19}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1665367200, 'flash_sale_stock': 30, 'promotionid': 679595582229923, 'lowest_past_price': None, 'promo_images': ['7487eedc132cb36f2f6208b06fc828b0'], 'start_time': 1665342000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 669900000, 'stock': 30}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1665367200, 'flash_sale_stock': 30, 'promotionid': 679595582229923, 'lowest_past_price': None, 'promo_images': ['7487eedc132cb36f2f6208b06fc828b0'], 'start_time': 1665342000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 669900000, 'stock': 28}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1665367200, 'flash_sale_stock': 30, 'promotionid': 679595582229923, 'lowest_past_price': None, 'promo_images': ['7487eedc132cb36f2f6208b06fc828b0'], 'start_time': 1665342000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 669900000, 'stock': 27}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1665367200, 'flash_sale_stock': 30, 'promotionid': 679595582229923, 'lowest_past_price': None, 'promo_images': ['7487eedc132cb36f2f6208b06fc828b0'], 'start_time': 1665342000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 669900000, 'stock': 24}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1665378000, 'flash_sale_stock': 150, 'promotionid': 115216474185728, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1665367200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 215000000, 'stock': 150}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1665378000, 'flash_sale_stock': 30, 'promotionid': 115216474185728, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1665367200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1149000000, 'stock': 30}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1665378000, 'flash_sale_stock': 150, 'promotionid': 115216474185728, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1665367200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 215000000, 'stock': 149}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1665378000, 'flash_sale_stock': 30, 'promotionid': 115216474185728, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1665367200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1149000000, 'stock': 24}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1665378000, 'flash_sale_stock': 30, 'promotionid': 115216474185728, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1665367200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1149000000, 'stock': 22}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1665378000, 'flash_sale_stock': 150, 'promotionid': 115216474185728, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1665367200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 215000000, 'stock': 148}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1665385200, 'flash_sale_stock': 50, 'promotionid': 115216488902656, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1665378000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1090000000, 'stock': 49}",
-           "{'price_before_discount': 999000000, 'hidden_price_display': None, 'end_time': 1665385200, 'flash_sale_stock': 20, 'promotionid': 112432754393088, 'lowest_past_price': None, 'promo_images': ['7e57cbf5900076387da4da298ff931ec'], 'start_time': 1665378000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 659000000, 'stock': 20}",
-           "{'price_before_discount': 399000000, 'hidden_price_display': None, 'end_time': 1665385200, 'flash_sale_stock': 70, 'promotionid': 112432754393088, 'lowest_past_price': None, 'promo_images': ['de2af3edeabdbf5515f4d62c0287bee7'], 'start_time': 1665378000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 312000000, 'stock': 70}",
-           "{'price_before_discount': 2141400000, 'hidden_price_display': None, 'end_time': 1665385200, 'flash_sale_stock': 5, 'promotionid': 680257015617572, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1665378000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1050000000, 'stock': 5}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1665385200, 'flash_sale_stock': 50, 'promotionid': 115216488902656, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1665378000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1090000000, 'stock': 41}",
-           "{'price_before_discount': 1799000000, 'hidden_price_display': None, 'end_time': 1665392400, 'flash_sale_stock': 20, 'promotionid': 115216501473281, 'lowest_past_price': None, 'promo_images': ['1cdab576ea5a1c6fee7eb5546c532439'], 'start_time': 1665385200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1499900000, 'stock': 20}",
-           "{'price_before_discount': 1699000000, 'hidden_price_display': None, 'end_time': 1665392400, 'flash_sale_stock': 30, 'promotionid': 115216501473281, 'lowest_past_price': None, 'promo_images': ['bb637bbcfff75fb6ed60205b09fd0c00'], 'start_time': 1665385200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 799000000, 'stock': 30}",
-           "{'price_before_discount': 1699000000, 'hidden_price_display': None, 'end_time': 1665392400, 'flash_sale_stock': 30, 'promotionid': 115216501473281, 'lowest_past_price': None, 'promo_images': ['bb637bbcfff75fb6ed60205b09fd0c00'], 'start_time': 1665385200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 799000000, 'stock': 29}",
-           "{'price_before_discount': 1799000000, 'hidden_price_display': None, 'end_time': 1665392400, 'flash_sale_stock': 20, 'promotionid': 115216501473281, 'lowest_past_price': None, 'promo_images': ['1cdab576ea5a1c6fee7eb5546c532439'], 'start_time': 1665385200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1499900000, 'stock': 17}",
-           "{'price_before_discount': 1890000000, 'hidden_price_display': None, 'end_time': 1665399600, 'flash_sale_stock': 80, 'promotionid': 679924203866485, 'lowest_past_price': None, 'promo_images': ['61a2ee81dd0020fa6fdce5b3e2b7cef5'], 'start_time': 1665392400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1150000000, 'stock': 80}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1665399600, 'flash_sale_stock': 300, 'promotionid': 115216518250496, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1665392400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 215000000, 'stock': 300}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1665399600, 'flash_sale_stock': 300, 'promotionid': 115216518250496, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1665392400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 215000000, 'stock': 298}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1665421200, 'flash_sale_stock': 20, 'promotionid': 112433469521920, 'lowest_past_price': None, 'promo_images': ['203d98e69b73681e61b97b669c785f40'], 'start_time': 1665410400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 879000000, 'stock': 20}",
-           "{'price_before_discount': 999000000, 'hidden_price_display': None, 'end_time': 1665421200, 'flash_sale_stock': 20, 'promotionid': 115216539189248, 'lowest_past_price': None, 'promo_images': ['7e57cbf5900076387da4da298ff931ec'], 'start_time': 1665410400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 659000000, 'stock': 19}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1665421200, 'flash_sale_stock': 30, 'promotionid': 680315847009891, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1665410400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 30}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1665421200, 'flash_sale_stock': 30, 'promotionid': 115216539189248, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1665410400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 29}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1665421200, 'flash_sale_stock': 20, 'promotionid': 112433469521920, 'lowest_past_price': None, 'promo_images': ['203d98e69b73681e61b97b669c785f40'], 'start_time': 1665410400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 879000000, 'stock': 19}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1665421200, 'flash_sale_stock': 30, 'promotionid': 115216539189248, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1665410400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 22}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1665421200, 'flash_sale_stock': 30, 'promotionid': 115216539189248, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1665410400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 19}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1665550800, 'flash_sale_stock': 20, 'promotionid': 116084193943552, 'lowest_past_price': None, 'promo_images': ['203d98e69b73681e61b97b669c785f40'], 'start_time': 1665507600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 879000000, 'stock': 20}",
-           "{'price_before_discount': 699900000, 'hidden_price_display': None, 'end_time': 1665572400, 'flash_sale_stock': 40, 'promotionid': 680623648082973, 'lowest_past_price': None, 'promo_images': ['77ea1e5671d8853acabaf9cb70778d2d'], 'start_time': 1665550800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 499900000, 'stock': 40}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1665572400, 'flash_sale_stock': 10, 'promotionid': 680617176280915, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1665550800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 10}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1665572400, 'flash_sale_stock': 40, 'promotionid': 680623648082973, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1665550800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 220000000, 'stock': 40}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1665572400, 'flash_sale_stock': 20, 'promotionid': 113723941535744, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1665550800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 20}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1665572400, 'flash_sale_stock': 20, 'promotionid': 113723941535744, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1665550800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 18}",
-           "{'price_before_discount': 699900000, 'hidden_price_display': None, 'end_time': 1665572400, 'flash_sale_stock': 40, 'promotionid': 680623648082973, 'lowest_past_price': None, 'promo_images': ['77ea1e5671d8853acabaf9cb70778d2d'], 'start_time': 1665550800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 499900000, 'stock': 38}",
-           "{'price_before_discount': 2141400000, 'hidden_price_display': None, 'end_time': 1665745200, 'flash_sale_stock': 5, 'promotionid': 680993870906404, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1665723600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 5}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1665745200, 'flash_sale_stock': 20, 'promotionid': 116085236178945, 'lowest_past_price': None, 'promo_images': ['203d98e69b73681e61b97b669c785f40'], 'start_time': 1665723600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 879000000, 'stock': 20}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1665766800, 'flash_sale_stock': 20, 'promotionid': 116085393461248, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1665756000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 20}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1665766800, 'flash_sale_stock': 20, 'promotionid': 116085393461248, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1665756000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 18}",
-           "{'price_before_discount': 999000000, 'hidden_price_display': None, 'end_time': 1665774000, 'flash_sale_stock': 20, 'promotionid': 116478057910272, 'lowest_past_price': None, 'promo_images': ['7e57cbf5900076387da4da298ff931ec'], 'start_time': 1665766800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 659000000, 'stock': 20}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1665774000, 'flash_sale_stock': 50, 'promotionid': 116478057910272, 'lowest_past_price': None, 'promo_images': ['416c03d70d90acfda026e6145c0dba4d'], 'start_time': 1665766800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 292000000, 'stock': 49}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1665774000, 'flash_sale_stock': 50, 'promotionid': 681059683794531, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1665766800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 50}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1665774000, 'flash_sale_stock': 50, 'promotionid': 116478057910272, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1665766800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 48}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1665774000, 'flash_sale_stock': 50, 'promotionid': 116478057910272, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1665766800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 45}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1665774000, 'flash_sale_stock': 50, 'promotionid': 116478057910272, 'lowest_past_price': None, 'promo_images': ['416c03d70d90acfda026e6145c0dba4d'], 'start_time': 1665766800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 292000000, 'stock': 48}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1665799200, 'flash_sale_stock': 30, 'promotionid': 116478160670720, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1665774000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1090000000, 'stock': 30}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1665799200, 'flash_sale_stock': 30, 'promotionid': 116478160670720, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1665774000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1090000000, 'stock': 30}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1665799200, 'flash_sale_stock': 20, 'promotionid': 680687892234659, 'lowest_past_price': None, 'promo_images': ['7487eedc132cb36f2f6208b06fc828b0'], 'start_time': 1665774000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 669900000, 'stock': 20}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1665799200, 'flash_sale_stock': 30, 'promotionid': 116478160670720, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1665774000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1090000000, 'stock': 29}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1665799200, 'flash_sale_stock': 30, 'promotionid': 116478160670720, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1665774000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1090000000, 'stock': 28}",
-           "{'price_before_discount': 199000000, 'hidden_price_display': None, 'end_time': 1665810000, 'flash_sale_stock': 100, 'promotionid': 116478196318208, 'lowest_past_price': None, 'promo_images': ['d64b7f28c0174f976d5f9bc9ba112b2d'], 'start_time': 1665799200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 140000000, 'stock': 100}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1665810000, 'flash_sale_stock': 200, 'promotionid': 116478196318208, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1665799200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 220000000, 'stock': 200}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1665810000, 'flash_sale_stock': 200, 'promotionid': 116478196318208, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1665799200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 220000000, 'stock': 199}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1665817200, 'flash_sale_stock': 20, 'promotionid': 116478211059712, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1665810000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 20}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1665831600, 'flash_sale_stock': 20, 'promotionid': 113734477639680, 'lowest_past_price': None, 'promo_images': ['203d98e69b73681e61b97b669c785f40'], 'start_time': 1665817200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 879000000, 'stock': 20}",
-           "{'price_before_discount': 399000000, 'hidden_price_display': None, 'end_time': 1665842400, 'flash_sale_stock': 20, 'promotionid': 113734668484610, 'lowest_past_price': None, 'promo_images': ['de2af3edeabdbf5515f4d62c0287bee7'], 'start_time': 1665831600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 349000000, 'stock': 20}",
-           "{'price_before_discount': 399000000, 'hidden_price_display': None, 'end_time': 1665842400, 'flash_sale_stock': 20, 'promotionid': 113734668484610, 'lowest_past_price': None, 'promo_images': ['de2af3edeabdbf5515f4d62c0287bee7'], 'start_time': 1665831600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 349000000, 'stock': 19}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1665853200, 'flash_sale_stock': 20, 'promotionid': 116478294896640, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1665842400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1119000000, 'stock': 20}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1665853200, 'flash_sale_stock': 30, 'promotionid': 116478294896640, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1665842400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 30}",
-           "{'price_before_discount': 999000000, 'hidden_price_display': None, 'end_time': 1665853200, 'flash_sale_stock': 20, 'promotionid': 116478294896640, 'lowest_past_price': None, 'promo_images': ['7e57cbf5900076387da4da298ff931ec'], 'start_time': 1665842400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 659000000, 'stock': 20}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1665853200, 'flash_sale_stock': 30, 'promotionid': 116478294896640, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1665842400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 28}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1665853200, 'flash_sale_stock': 30, 'promotionid': 116478294896640, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1665842400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 26}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1665939600, 'flash_sale_stock': 30, 'promotionid': 117346291425280, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1665928800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1150000000, 'stock': 30}",
-           "{'price_before_discount': 699900000, 'hidden_price_display': None, 'end_time': 1665982800, 'flash_sale_stock': 100, 'promotionid': 117346769604608, 'lowest_past_price': None, 'promo_images': ['77ea1e5671d8853acabaf9cb70778d2d'], 'start_time': 1665939600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 499900000, 'stock': 100}",
-           "{'price_before_discount': 699900000, 'hidden_price_display': None, 'end_time': 1665982800, 'flash_sale_stock': 100, 'promotionid': 117346769604608, 'lowest_past_price': None, 'promo_images': ['77ea1e5671d8853acabaf9cb70778d2d'], 'start_time': 1665939600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 499900000, 'stock': 99}",
-           "{'price_before_discount': 699900000, 'hidden_price_display': None, 'end_time': 1665982800, 'flash_sale_stock': 100, 'promotionid': 117346769604608, 'lowest_past_price': None, 'promo_images': ['77ea1e5671d8853acabaf9cb70778d2d'], 'start_time': 1665939600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 499900000, 'stock': 98}",
-           "{'price_before_discount': 699900000, 'hidden_price_display': None, 'end_time': 1665982800, 'flash_sale_stock': 100, 'promotionid': 117346769604608, 'lowest_past_price': None, 'promo_images': ['77ea1e5671d8853acabaf9cb70778d2d'], 'start_time': 1665939600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 499900000, 'stock': 97}",
-           "{'price_before_discount': 699900000, 'hidden_price_display': None, 'end_time': 1665982800, 'flash_sale_stock': 100, 'promotionid': 117346769604608, 'lowest_past_price': None, 'promo_images': ['77ea1e5671d8853acabaf9cb70778d2d'], 'start_time': 1665939600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 499900000, 'stock': 96}",
-           "{'price_before_discount': 699900000, 'hidden_price_display': None, 'end_time': 1665982800, 'flash_sale_stock': 100, 'promotionid': 117346769604608, 'lowest_past_price': None, 'promo_images': ['77ea1e5671d8853acabaf9cb70778d2d'], 'start_time': 1665939600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 499900000, 'stock': 95}",
-           "{'price_before_discount': 2141400000, 'hidden_price_display': None, 'end_time': 1666004400, 'flash_sale_stock': 5, 'promotionid': 681532409112612, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1665982800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 5}",
-           "{'price_before_discount': 519000000, 'hidden_price_display': None, 'end_time': 1666004400, 'flash_sale_stock': 10, 'promotionid': 681541558948573, 'lowest_past_price': None, 'promo_images': ['865b5c2978670e1d1eb728d08d54c9db'], 'start_time': 1665982800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 329900000, 'stock': 10}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1666004400, 'flash_sale_stock': 10, 'promotionid': 681542861290605, 'lowest_past_price': None, 'promo_images': ['203d98e69b73681e61b97b669c785f40'], 'start_time': 1665982800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 879000000, 'stock': 10}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1666004400, 'flash_sale_stock': 25, 'promotionid': 681541558948573, 'lowest_past_price': None, 'promo_images': ['416c03d70d90acfda026e6145c0dba4d'], 'start_time': 1665982800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 289000000, 'stock': 25}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1666004400, 'flash_sale_stock': 10, 'promotionid': 681522854444883, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1665982800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 10}",
-           "{'price_before_discount': 519000000, 'hidden_price_display': None, 'end_time': 1666004400, 'flash_sale_stock': 10, 'promotionid': 681541558948573, 'lowest_past_price': None, 'promo_images': ['865b5c2978670e1d1eb728d08d54c9db'], 'start_time': 1665982800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 329900000, 'stock': 9}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1666004400, 'flash_sale_stock': 25, 'promotionid': 681541558948573, 'lowest_past_price': None, 'promo_images': ['416c03d70d90acfda026e6145c0dba4d'], 'start_time': 1665982800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 289000000, 'stock': 24}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1666026000, 'flash_sale_stock': 30, 'promotionid': 681573964139549, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1666015200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 220000000, 'stock': 30}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1666026000, 'flash_sale_stock': 20, 'promotionid': 681591079027617, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1666015200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1150000000, 'stock': 20}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666026000, 'flash_sale_stock': 20, 'promotionid': 117346803130368, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1666015200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 20}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666026000, 'flash_sale_stock': 20, 'promotionid': 117346803130368, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1666015200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 18}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666026000, 'flash_sale_stock': 20, 'promotionid': 117346803130368, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1666015200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 17}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1666090800, 'flash_sale_stock': 10, 'promotionid': 681566183691683, 'lowest_past_price': None, 'promo_images': ['7487eedc132cb36f2f6208b06fc828b0'], 'start_time': 1666069200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 679000000, 'stock': 10}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1666101600, 'flash_sale_stock': 30, 'promotionid': 116471779028992, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1666090800, 'promo_overlay_image': '9beb2804cf539d52301662af8f28965e', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1084000000, 'stock': 30}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1666101600, 'flash_sale_stock': 30, 'promotionid': 116471779028992, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1666090800, 'promo_overlay_image': '9beb2804cf539d52301662af8f28965e', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1084000000, 'stock': 27}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1666112400, 'flash_sale_stock': 20, 'promotionid': 116471911088128, 'lowest_past_price': None, 'promo_images': ['203d98e69b73681e61b97b669c785f40'], 'start_time': 1666101600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 879000000, 'stock': 20}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1666112400, 'flash_sale_stock': 20, 'promotionid': 116471911088128, 'lowest_past_price': None, 'promo_images': ['203d98e69b73681e61b97b669c785f40'], 'start_time': 1666101600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 879000000, 'stock': 19}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666155600, 'flash_sale_stock': 10, 'promotionid': 681772071642756, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1666112400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 990000000, 'stock': 10}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1666177200, 'flash_sale_stock': 5, 'promotionid': 681884682387283, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1666155600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 5}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1666177200, 'flash_sale_stock': 40, 'promotionid': 681763055937565, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1666155600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 220000000, 'stock': 40}",
-           "{'price_before_discount': 959000000, 'hidden_price_display': None, 'end_time': 1666188000, 'flash_sale_stock': 20, 'promotionid': 681914388519965, 'lowest_past_price': None, 'promo_images': ['f1c86bd6fa4aa20ee489b22d98071e76'], 'start_time': 1666177200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 699900000, 'stock': 20}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1666188000, 'flash_sale_stock': 100, 'promotionid': 116472240398338, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1666177200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1090000000, 'stock': 100}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1666188000, 'flash_sale_stock': 100, 'promotionid': 116472240398338, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1666177200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1090000000, 'stock': 96}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1666188000, 'flash_sale_stock': 100, 'promotionid': 116472240398338, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1666177200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1090000000, 'stock': 95}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666242000, 'flash_sale_stock': 25, 'promotionid': 116472448016384, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1666198800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 25}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666242000, 'flash_sale_stock': 25, 'promotionid': 116472448016384, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1666198800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 24}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666242000, 'flash_sale_stock': 25, 'promotionid': 116472448016384, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1666198800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 23}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666242000, 'flash_sale_stock': 25, 'promotionid': 116472448016384, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1666198800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 22}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1666263600, 'flash_sale_stock': 10, 'promotionid': 681885785517475, 'lowest_past_price': None, 'promo_images': ['7487eedc132cb36f2f6208b06fc828b0'], 'start_time': 1666242000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 679000000, 'stock': 10}",
-           "{'price_before_discount': 2141400000, 'hidden_price_display': None, 'end_time': 1666350000, 'flash_sale_stock': 5, 'promotionid': 682269012779044, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1666328400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 5}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1666350000, 'flash_sale_stock': 5, 'promotionid': 682065547041619, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1666328400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 5}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1666350000, 'flash_sale_stock': 10, 'promotionid': 682258766052461, 'lowest_past_price': None, 'promo_images': ['203d98e69b73681e61b97b669c785f40'], 'start_time': 1666328400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 879000000, 'stock': 10}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1666350000, 'flash_sale_stock': 5, 'promotionid': 682065547041619, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1666328400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 4}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1666360800, 'flash_sale_stock': 50, 'promotionid': 682085312752669, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1666350000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 220000000, 'stock': 50}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666360800, 'flash_sale_stock': 10, 'promotionid': 682310890788484, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1666350000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 990000000, 'stock': 10}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1666360800, 'flash_sale_stock': 50, 'promotionid': 117363295141888, 'lowest_past_price': None, 'promo_images': ['416c03d70d90acfda026e6145c0dba4d'], 'start_time': 1666350000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 292000000, 'stock': 49}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1666371600, 'flash_sale_stock': 30, 'promotionid': 682135673752481, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1666360800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1150000000, 'stock': 30}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1666371600, 'flash_sale_stock': 30, 'promotionid': 682135673752481, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1666360800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1150000000, 'stock': 29}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1666436400, 'flash_sale_stock': 10, 'promotionid': 682266181577123, 'lowest_past_price': None, 'promo_images': ['7487eedc132cb36f2f6208b06fc828b0'], 'start_time': 1666414800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 679000000, 'stock': 10}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1666447200, 'flash_sale_stock': 30, 'promotionid': 117364031234049, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1666436400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1149000000, 'stock': 30}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1666447200, 'flash_sale_stock': 30, 'promotionid': 117364031234049, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1666436400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1149000000, 'stock': 29}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1666458000, 'flash_sale_stock': 10, 'promotionid': 682259783182445, 'lowest_past_price': None, 'promo_images': ['203d98e69b73681e61b97b669c785f40'], 'start_time': 1666447200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 879000000, 'stock': 10}",
-           "{'price_before_discount': 699900000, 'hidden_price_display': None, 'end_time': 1666501200, 'flash_sale_stock': 100, 'promotionid': 116104005619712, 'lowest_past_price': None, 'promo_images': ['77ea1e5671d8853acabaf9cb70778d2d'], 'start_time': 1666458000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 499900000, 'stock': 100}",
-           "{'price_before_discount': 599000000, 'hidden_price_display': None, 'end_time': 1666501200, 'flash_sale_stock': 120, 'promotionid': 116104005619712, 'lowest_past_price': None, 'promo_images': ['85309e59b9e09fd8fdaae6ecbf456f61'], 'start_time': 1666458000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 329900000, 'stock': 120}",
-           "{'price_before_discount': 699900000, 'hidden_price_display': None, 'end_time': 1666501200, 'flash_sale_stock': 100, 'promotionid': 116104005619712, 'lowest_past_price': None, 'promo_images': ['77ea1e5671d8853acabaf9cb70778d2d'], 'start_time': 1666458000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 499900000, 'stock': 99}",
-           "{'price_before_discount': 599000000, 'hidden_price_display': None, 'end_time': 1666501200, 'flash_sale_stock': 120, 'promotionid': 116104005619712, 'lowest_past_price': None, 'promo_images': ['85309e59b9e09fd8fdaae6ecbf456f61'], 'start_time': 1666458000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 329900000, 'stock': 119}",
-           "{'price_before_discount': 599000000, 'hidden_price_display': None, 'end_time': 1666501200, 'flash_sale_stock': 120, 'promotionid': 116104005619712, 'lowest_past_price': None, 'promo_images': ['85309e59b9e09fd8fdaae6ecbf456f61'], 'start_time': 1666458000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 329900000, 'stock': 116}",
-           "{'price_before_discount': 599000000, 'hidden_price_display': None, 'end_time': 1666501200, 'flash_sale_stock': 120, 'promotionid': 116104005619712, 'lowest_past_price': None, 'promo_images': ['85309e59b9e09fd8fdaae6ecbf456f61'], 'start_time': 1666458000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 329900000, 'stock': 115}",
-           "{'price_before_discount': 599000000, 'hidden_price_display': None, 'end_time': 1666501200, 'flash_sale_stock': 120, 'promotionid': 116104005619712, 'lowest_past_price': None, 'promo_images': ['85309e59b9e09fd8fdaae6ecbf456f61'], 'start_time': 1666458000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 329900000, 'stock': 113}",
-           "{'price_before_discount': 699900000, 'hidden_price_display': None, 'end_time': 1666501200, 'flash_sale_stock': 100, 'promotionid': 116104005619712, 'lowest_past_price': None, 'promo_images': ['77ea1e5671d8853acabaf9cb70778d2d'], 'start_time': 1666458000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 499900000, 'stock': 98}",
-           "{'price_before_discount': 599000000, 'hidden_price_display': None, 'end_time': 1666501200, 'flash_sale_stock': 120, 'promotionid': 116104005619712, 'lowest_past_price': None, 'promo_images': ['85309e59b9e09fd8fdaae6ecbf456f61'], 'start_time': 1666458000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 329900000, 'stock': 111}",
-           "{'price_before_discount': 599000000, 'hidden_price_display': None, 'end_time': 1666501200, 'flash_sale_stock': 120, 'promotionid': 116104005619712, 'lowest_past_price': None, 'promo_images': ['85309e59b9e09fd8fdaae6ecbf456f61'], 'start_time': 1666458000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 329900000, 'stock': 107}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1666522800, 'flash_sale_stock': 200, 'promotionid': 116104160825344, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1666501200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 199900000, 'stock': 200}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1666522800, 'flash_sale_stock': 10, 'promotionid': 682071050023763, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1666501200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 10}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1666522800, 'flash_sale_stock': 200, 'promotionid': 116104160825344, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1666501200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 199900000, 'stock': 199}",
-           "{'price_before_discount': 399000000, 'hidden_price_display': None, 'end_time': 1666533600, 'flash_sale_stock': 30, 'promotionid': 116104334868481, 'lowest_past_price': None, 'promo_images': ['de2af3edeabdbf5515f4d62c0287bee7'], 'start_time': 1666522800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 349000000, 'stock': 30}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666544400, 'flash_sale_stock': 25, 'promotionid': 117366396841985, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1666533600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 25}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666544400, 'flash_sale_stock': 25, 'promotionid': 117366396841985, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1666533600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 24}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1666674000, 'flash_sale_stock': 20, 'promotionid': 682828241431971, 'lowest_past_price': None, 'promo_images': ['7487eedc132cb36f2f6208b06fc828b0'], 'start_time': 1666630800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 679000000, 'stock': 20}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666674000, 'flash_sale_stock': 30, 'promotionid': 115330687131649, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1666630800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 30}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666674000, 'flash_sale_stock': 30, 'promotionid': 115330687131649, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1666630800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 27}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666674000, 'flash_sale_stock': 30, 'promotionid': 115330687131649, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1666630800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 26}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666674000, 'flash_sale_stock': 30, 'promotionid': 115330687131649, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1666630800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 25}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666674000, 'flash_sale_stock': 30, 'promotionid': 115330687131649, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1666630800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 24}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666674000, 'flash_sale_stock': 30, 'promotionid': 115330687131649, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1666630800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 23}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1666695600, 'flash_sale_stock': 5, 'promotionid': 682972041036627, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1666674000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 5}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1666695600, 'flash_sale_stock': 50, 'promotionid': 115331173691392, 'lowest_past_price': None, 'promo_images': ['416c03d70d90acfda026e6145c0dba4d'], 'start_time': 1666674000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 292000000, 'stock': 50}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666695600, 'flash_sale_stock': 20, 'promotionid': 115331173691392, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1666674000, 'promo_overlay_image': '9beb2804cf539d52301662af8f28965e', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1060000000, 'stock': 20}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1666695600, 'flash_sale_stock': 50, 'promotionid': 115331173691392, 'lowest_past_price': None, 'promo_images': ['416c03d70d90acfda026e6145c0dba4d'], 'start_time': 1666674000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 292000000, 'stock': 49}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666695600, 'flash_sale_stock': 20, 'promotionid': 115331173691392, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1666674000, 'promo_overlay_image': '9beb2804cf539d52301662af8f28965e', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1060000000, 'stock': 18}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666695600, 'flash_sale_stock': 20, 'promotionid': 115331173691392, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1666674000, 'promo_overlay_image': '9beb2804cf539d52301662af8f28965e', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1060000000, 'stock': 17}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1666706400, 'flash_sale_stock': 20, 'promotionid': 115331905581056, 'lowest_past_price': None, 'promo_images': ['203d98e69b73681e61b97b669c785f40'], 'start_time': 1666695600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 879000000, 'stock': 20}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1666717200, 'flash_sale_stock': 30, 'promotionid': 683051290324897, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1666706400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1150000000, 'stock': 30}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1666803600, 'flash_sale_stock': 50, 'promotionid': 683224873696161, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1666792800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1180000000, 'stock': 50}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1666846800, 'flash_sale_stock': 20, 'promotionid': 682831898814883, 'lowest_past_price': None, 'promo_images': ['7487eedc132cb36f2f6208b06fc828b0'], 'start_time': 1666803600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 679000000, 'stock': 20}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1666868400, 'flash_sale_stock': 10, 'promotionid': 683163687188589, 'lowest_past_price': None, 'promo_images': ['203d98e69b73681e61b97b669c785f40'], 'start_time': 1666846800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 879000000, 'stock': 10}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1666868400, 'flash_sale_stock': 10, 'promotionid': 683357258470109, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1666846800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 289000000, 'stock': 10}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666868400, 'flash_sale_stock': 30, 'promotionid': 115337987321856, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1666846800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 30}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1666868400, 'flash_sale_stock': 200, 'promotionid': 115337987321856, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1666846800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 220000000, 'stock': 200}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1666868400, 'flash_sale_stock': 10, 'promotionid': 683335162896211, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1666846800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 10}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1666868400, 'flash_sale_stock': 200, 'promotionid': 115337987321856, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1666846800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 220000000, 'stock': 199}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666868400, 'flash_sale_stock': 30, 'promotionid': 115337987321856, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1666846800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 29}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666868400, 'flash_sale_stock': 30, 'promotionid': 115337987321856, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1666846800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 28}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1666868400, 'flash_sale_stock': 10, 'promotionid': 683357258470109, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1666846800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 289000000, 'stock': 9}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1666868400, 'flash_sale_stock': 200, 'promotionid': 115337987321856, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1666846800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 220000000, 'stock': 198}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1666868400, 'flash_sale_stock': 10, 'promotionid': 683357258470109, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1666846800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 289000000, 'stock': 7}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666868400, 'flash_sale_stock': 30, 'promotionid': 115337987321856, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1666846800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 27}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1666868400, 'flash_sale_stock': 10, 'promotionid': 683335162896211, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1666846800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 9}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666933200, 'flash_sale_stock': 10, 'promotionid': 683379916104324, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1666890000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 990000000, 'stock': 10}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666933200, 'flash_sale_stock': 10, 'promotionid': 683379916104324, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1666890000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 990000000, 'stock': 9}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1666933200, 'flash_sale_stock': 10, 'promotionid': 683379916104324, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1666890000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 990000000, 'stock': 8}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1666965600, 'flash_sale_stock': 30, 'promotionid': 118808367091713, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1666954800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1149000000, 'stock': 30}",
-           "{'price_before_discount': 519000000, 'hidden_price_display': None, 'end_time': 1666965600, 'flash_sale_stock': 10, 'promotionid': 683579296561885, 'lowest_past_price': None, 'promo_images': ['865b5c2978670e1d1eb728d08d54c9db'], 'start_time': 1666954800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 329000000, 'stock': 10}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1666965600, 'flash_sale_stock': 30, 'promotionid': 118808367091713, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1666954800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1149000000, 'stock': 29}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1666965600, 'flash_sale_stock': 30, 'promotionid': 118808367091713, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1666954800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1149000000, 'stock': 27}",
-           "{'price_before_discount': 699900000, 'hidden_price_display': None, 'end_time': 1666976400, 'flash_sale_stock': 100, 'promotionid': 118808465657856, 'lowest_past_price': None, 'promo_images': ['77ea1e5671d8853acabaf9cb70778d2d'], 'start_time': 1666965600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 499900000, 'stock': 100}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1666976400, 'flash_sale_stock': 200, 'promotionid': 118808465657856, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1666965600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 220000000, 'stock': 200}",
-           "{'price_before_discount': 699900000, 'hidden_price_display': None, 'end_time': 1666976400, 'flash_sale_stock': 100, 'promotionid': 118808465657856, 'lowest_past_price': None, 'promo_images': ['77ea1e5671d8853acabaf9cb70778d2d'], 'start_time': 1666965600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 499900000, 'stock': 99}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1667019600, 'flash_sale_stock': 80, 'promotionid': 115341332271104, 'lowest_past_price': None, 'promo_images': ['8790407e23b43b2675f7952bc4f7cdd6'], 'start_time': 1666976400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 264000000, 'stock': 80}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1667019600, 'flash_sale_stock': 10, 'promotionid': 683521215914093, 'lowest_past_price': None, 'promo_images': ['203d98e69b73681e61b97b669c785f40'], 'start_time': 1666976400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 879000000, 'stock': 10}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1667019600, 'flash_sale_stock': 20, 'promotionid': 115341332271104, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1666976400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 20}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1667019600, 'flash_sale_stock': 20, 'promotionid': 115341332271104, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1666976400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 19}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1667019600, 'flash_sale_stock': 20, 'promotionid': 115341332271104, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1666976400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 18}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1667019600, 'flash_sale_stock': 80, 'promotionid': 115341332271104, 'lowest_past_price': None, 'promo_images': ['8790407e23b43b2675f7952bc4f7cdd6'], 'start_time': 1666976400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 264000000, 'stock': 79}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1667019600, 'flash_sale_stock': 80, 'promotionid': 115341332271104, 'lowest_past_price': None, 'promo_images': ['8790407e23b43b2675f7952bc4f7cdd6'], 'start_time': 1666976400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 264000000, 'stock': 75}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1667019600, 'flash_sale_stock': 20, 'promotionid': 115341332271104, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1666976400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 17}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1667019600, 'flash_sale_stock': 80, 'promotionid': 115341332271104, 'lowest_past_price': None, 'promo_images': ['8790407e23b43b2675f7952bc4f7cdd6'], 'start_time': 1666976400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 264000000, 'stock': 74}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1667019600, 'flash_sale_stock': 80, 'promotionid': 115341332271104, 'lowest_past_price': None, 'promo_images': ['8790407e23b43b2675f7952bc4f7cdd6'], 'start_time': 1666976400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 264000000, 'stock': 73}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1667019600, 'flash_sale_stock': 20, 'promotionid': 115341332271104, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1666976400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 16}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1667052000, 'flash_sale_stock': 30, 'promotionid': 683741683189665, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1667041200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 30}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1667052000, 'flash_sale_stock': 5, 'promotionid': 683741620314963, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1667041200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1050000000, 'stock': 5}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1667052000, 'flash_sale_stock': 30, 'promotionid': 115341707673600, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1667041200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1084000000, 'stock': 30}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1667052000, 'flash_sale_stock': 30, 'promotionid': 683741683189665, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1667041200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 29}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1667052000, 'flash_sale_stock': 30, 'promotionid': 683741683189665, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1667041200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 28}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1667052000, 'flash_sale_stock': 30, 'promotionid': 115341707673600, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1667041200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1084000000, 'stock': 26}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1667052000, 'flash_sale_stock': 30, 'promotionid': 683741683189665, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1667041200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 27}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1667052000, 'flash_sale_stock': 30, 'promotionid': 683741683189665, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1667041200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 29}",
-           "{'price_before_discount': 2141400000, 'hidden_price_display': None, 'end_time': 1667062800, 'flash_sale_stock': 5, 'promotionid': 683741215556644, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1667052000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1050000000, 'stock': 5}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1667127600, 'flash_sale_stock': 10, 'promotionid': 683550917887395, 'lowest_past_price': None, 'promo_images': ['7487eedc132cb36f2f6208b06fc828b0'], 'start_time': 1667106000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 679000000, 'stock': 10}",
-           "{'price_before_discount': 1699000000, 'hidden_price_display': None, 'end_time': 1667149200, 'flash_sale_stock': 30, 'promotionid': 115343599280128, 'lowest_past_price': None, 'promo_images': ['bb637bbcfff75fb6ed60205b09fd0c00'], 'start_time': 1667138400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 849000000, 'stock': 30}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1667149200, 'flash_sale_stock': 20, 'promotionid': 115343599280128, 'lowest_past_price': None, 'promo_images': ['203d98e69b73681e61b97b669c785f40'], 'start_time': 1667138400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 829300000, 'stock': 20}",
-           "{'price_before_discount': 1699000000, 'hidden_price_display': None, 'end_time': 1667149200, 'flash_sale_stock': 30, 'promotionid': 115343599280128, 'lowest_past_price': None, 'promo_images': ['bb637bbcfff75fb6ed60205b09fd0c00'], 'start_time': 1667138400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 849000000, 'stock': 29}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1667149200, 'flash_sale_stock': 20, 'promotionid': 115343599280128, 'lowest_past_price': None, 'promo_images': ['203d98e69b73681e61b97b669c785f40'], 'start_time': 1667138400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 829300000, 'stock': 19}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1667192400, 'flash_sale_stock': 30, 'promotionid': 683743073646497, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1667149200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 30}",
-           "{'price_before_discount': 199000000, 'hidden_price_display': None, 'end_time': 1667192400, 'flash_sale_stock': 100, 'promotionid': 118809688281088, 'lowest_past_price': None, 'promo_images': ['d64b7f28c0174f976d5f9bc9ba112b2d'], 'start_time': 1667149200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 139900000, 'stock': 100}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1667192400, 'flash_sale_stock': 30, 'promotionid': 683743073646497, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1667149200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 30}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1667192400, 'flash_sale_stock': 30, 'promotionid': 683763975915107, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1667149200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 30}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1667192400, 'flash_sale_stock': 30, 'promotionid': 683743073646497, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1667149200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 29}",
-           "{'price_before_discount': 199000000, 'hidden_price_display': None, 'end_time': 1667192400, 'flash_sale_stock': 100, 'promotionid': 118809688281088, 'lowest_past_price': None, 'promo_images': ['d64b7f28c0174f976d5f9bc9ba112b2d'], 'start_time': 1667149200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 139900000, 'stock': 97}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1667192400, 'flash_sale_stock': 30, 'promotionid': 683743073646497, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1667149200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 29}",
-           "{'price_before_discount': 199000000, 'hidden_price_display': None, 'end_time': 1667192400, 'flash_sale_stock': 100, 'promotionid': 118809688281088, 'lowest_past_price': None, 'promo_images': ['d64b7f28c0174f976d5f9bc9ba112b2d'], 'start_time': 1667149200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 139900000, 'stock': 95}",
-           "{'price_before_discount': 199000000, 'hidden_price_display': None, 'end_time': 1667192400, 'flash_sale_stock': 100, 'promotionid': 118809688281088, 'lowest_past_price': None, 'promo_images': ['d64b7f28c0174f976d5f9bc9ba112b2d'], 'start_time': 1667149200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 139900000, 'stock': 92}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1667192400, 'flash_sale_stock': 30, 'promotionid': 683743073646497, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1667149200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 28}",
-           "{'price_before_discount': 199000000, 'hidden_price_display': None, 'end_time': 1667192400, 'flash_sale_stock': 100, 'promotionid': 118809688281088, 'lowest_past_price': None, 'promo_images': ['d64b7f28c0174f976d5f9bc9ba112b2d'], 'start_time': 1667149200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 139900000, 'stock': 91}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1667192400, 'flash_sale_stock': 30, 'promotionid': 683743073646497, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1667149200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 28}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1667192400, 'flash_sale_stock': 30, 'promotionid': 683743073646497, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1667149200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 27}",
-           "{'price_before_discount': 199000000, 'hidden_price_display': None, 'end_time': 1667192400, 'flash_sale_stock': 100, 'promotionid': 118809688281088, 'lowest_past_price': None, 'promo_images': ['d64b7f28c0174f976d5f9bc9ba112b2d'], 'start_time': 1667149200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 139900000, 'stock': 90}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1667214000, 'flash_sale_stock': 80, 'promotionid': 115344175988737, 'lowest_past_price': None, 'promo_images': ['8790407e23b43b2675f7952bc4f7cdd6'], 'start_time': 1667192400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 285000000, 'stock': 80}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1667214000, 'flash_sale_stock': 5, 'promotionid': 684065105994579, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1667192400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1050000000, 'stock': 5}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1667214000, 'flash_sale_stock': 200, 'promotionid': 118809782673409, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1667192400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 220000000, 'stock': 200}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1667214000, 'flash_sale_stock': 80, 'promotionid': 115344175988737, 'lowest_past_price': None, 'promo_images': ['8790407e23b43b2675f7952bc4f7cdd6'], 'start_time': 1667192400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 285000000, 'stock': 79}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1667214000, 'flash_sale_stock': 200, 'promotionid': 118809782673409, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1667192400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 220000000, 'stock': 199}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1667214000, 'flash_sale_stock': 80, 'promotionid': 115344175988737, 'lowest_past_price': None, 'promo_images': ['8790407e23b43b2675f7952bc4f7cdd6'], 'start_time': 1667192400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 285000000, 'stock': 78}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1667538000, 'flash_sale_stock': 10, 'promotionid': 684625217528452, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1667494800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 990000000, 'stock': 9}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1667559600, 'flash_sale_stock': 20, 'promotionid': 119147038306305, 'lowest_past_price': None, 'promo_images': ['b8f5d6f3cfe31e7764b725dcc8614868'], 'start_time': 1667538000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 879000000, 'stock': 20}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1667570400, 'flash_sale_stock': 20, 'promotionid': 116112027242496, 'lowest_past_price': None, 'promo_images': ['b8f5d6f3cfe31e7764b725dcc8614868'], 'start_time': 1667559600, 'promo_overlay_image': '529efd5fe7cf5d2fa8a96a5ff2abf57c', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 837200000, 'stock': 20}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1667570400, 'flash_sale_stock': 20, 'promotionid': 116112027242496, 'lowest_past_price': None, 'promo_images': ['b8f5d6f3cfe31e7764b725dcc8614868'], 'start_time': 1667559600, 'promo_overlay_image': '529efd5fe7cf5d2fa8a96a5ff2abf57c', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 837200000, 'stock': 18}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1667581200, 'flash_sale_stock': 5, 'promotionid': 684784313764691, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1667570400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 5}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1667624400, 'flash_sale_stock': 20, 'promotionid': 116112396382208, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1667581200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 19}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1667646000, 'flash_sale_stock': 20, 'promotionid': 684786905842083, 'lowest_past_price': None, 'promo_images': ['7487eedc132cb36f2f6208b06fc828b0'], 'start_time': 1667624400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 689000000, 'stock': 20}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1667656800, 'flash_sale_stock': 50, 'promotionid': 119386772115456, 'lowest_past_price': None, 'promo_images': ['8790407e23b43b2675f7952bc4f7cdd6'], 'start_time': 1667646000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 289000000, 'stock': 50}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1667667600, 'flash_sale_stock': 50, 'promotionid': 685031322633121, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1667656800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1150000000, 'stock': 50}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1667710800, 'flash_sale_stock': 11, 'promotionid': 684658698589828, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1667667600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 990000000, 'stock': 11}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1667732400, 'flash_sale_stock': 20, 'promotionid': 685031381384097, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1667710800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1180000000, 'stock': 20}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1667732400, 'flash_sale_stock': 10, 'promotionid': 684611531533421, 'lowest_past_price': None, 'promo_images': ['b8f5d6f3cfe31e7764b725dcc8614868'], 'start_time': 1667710800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 879000000, 'stock': 9}",
-           "{'price_before_discount': 519000000, 'hidden_price_display': None, 'end_time': 1667743200, 'flash_sale_stock': 10, 'promotionid': 684644513463005, 'lowest_past_price': None, 'promo_images': ['865b5c2978670e1d1eb728d08d54c9db'], 'start_time': 1667732400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 329900000, 'stock': 10}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1667797200, 'flash_sale_stock': 150, 'promotionid': 119388827287553, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1667754000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 220000000, 'stock': 150}",
-           "{'price_before_discount': 959000000, 'hidden_price_display': None, 'end_time': 1667797200, 'flash_sale_stock': 50, 'promotionid': 119388827287553, 'lowest_past_price': None, 'promo_images': ['b68671a9c8699b06e9dfd866925f2921'], 'start_time': 1667754000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 699900000, 'stock': 50}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1667797200, 'flash_sale_stock': 150, 'promotionid': 119388827287553, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1667754000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 220000000, 'stock': 149}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1667818800, 'flash_sale_stock': 10, 'promotionid': 684788193514915, 'lowest_past_price': None, 'promo_images': ['7487eedc132cb36f2f6208b06fc828b0'], 'start_time': 1667797200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 689000000, 'stock': 10}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1667883600, 'flash_sale_stock': 30, 'promotionid': 117514413748224, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1667840400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1150000000, 'stock': 30}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1667883600, 'flash_sale_stock': 20, 'promotionid': 117514413748224, 'lowest_past_price': None, 'promo_images': ['b8f5d6f3cfe31e7764b725dcc8614868'], 'start_time': 1667840400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 879000000, 'stock': 20}",
-           "{'price_before_discount': 1699000000, 'hidden_price_display': None, 'end_time': 1667905200, 'flash_sale_stock': 30, 'promotionid': 120123283533824, 'lowest_past_price': None, 'promo_images': ['bb637bbcfff75fb6ed60205b09fd0c00'], 'start_time': 1667883600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 799000000, 'stock': 28}",
-           "{'price_before_discount': 1699000000, 'hidden_price_display': None, 'end_time': 1667905200, 'flash_sale_stock': 30, 'promotionid': 120123283533824, 'lowest_past_price': None, 'promo_images': ['bb637bbcfff75fb6ed60205b09fd0c00'], 'start_time': 1667883600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 799000000, 'stock': 24}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1667916000, 'flash_sale_stock': 20, 'promotionid': 117515030327296, 'lowest_past_price': None, 'promo_images': ['b8f5d6f3cfe31e7764b725dcc8614868'], 'start_time': 1667905200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 879000000, 'stock': 20}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1667916000, 'flash_sale_stock': 20, 'promotionid': 120123296079872, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1667905200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 15}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1667926800, 'flash_sale_stock': 30, 'promotionid': 117515445563392, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1667916000, 'promo_overlay_image': '9beb2804cf539d52301662af8f28965e', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1078200000, 'stock': 30}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1667991600, 'flash_sale_stock': 20, 'promotionid': 120123912654848, 'lowest_past_price': None, 'promo_images': ['b8f5d6f3cfe31e7764b725dcc8614868'], 'start_time': 1667970000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 879000000, 'stock': 20}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1667991600, 'flash_sale_stock': 20, 'promotionid': 685576263423395, 'lowest_past_price': None, 'promo_images': ['7487eedc132cb36f2f6208b06fc828b0'], 'start_time': 1667970000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 689000000, 'stock': 20}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1667991600, 'flash_sale_stock': 20, 'promotionid': 685519734692573, 'lowest_past_price': None, 'promo_images': ['8790407e23b43b2675f7952bc4f7cdd6'], 'start_time': 1667970000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 289000000, 'stock': 18}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1668013200, 'flash_sale_stock': 5, 'promotionid': 685764742813523, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1668002400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 5}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1668056400, 'flash_sale_stock': 20, 'promotionid': 120124388671488, 'lowest_past_price': None, 'promo_images': ['b8f5d6f3cfe31e7764b725dcc8614868'], 'start_time': 1668013200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 879000000, 'stock': 20}",
-           "{'price_before_discount': 399000000, 'hidden_price_display': None, 'end_time': 1668106800, 'flash_sale_stock': 51, 'promotionid': 117518211739649, 'lowest_past_price': None, 'promo_images': ['de2af3edeabdbf5515f4d62c0287bee7'], 'start_time': 1668099600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 311100000, 'stock': 43}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1668106800, 'flash_sale_stock': 20, 'promotionid': 117518211739649, 'lowest_past_price': None, 'promo_images': ['b8f5d6f3cfe31e7764b725dcc8614868'], 'start_time': 1668099600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 879000000, 'stock': 18}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1668106800, 'flash_sale_stock': 50, 'promotionid': 120222101303296, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1668099600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1111000000, 'stock': 50}",
-           "{'price_before_discount': 199000000, 'hidden_price_display': None, 'end_time': 1668106800, 'flash_sale_stock': 120, 'promotionid': 117518211739649, 'lowest_past_price': None, 'promo_images': ['d64b7f28c0174f976d5f9bc9ba112b2d'], 'start_time': 1668099600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 139000000, 'stock': 103}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1668106800, 'flash_sale_stock': 100, 'promotionid': 120222101303296, 'lowest_past_price': None, 'promo_images': ['8e506c0dd957ee411b7d7dac94c8a7a7'], 'start_time': 1668099600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1090000000, 'stock': 96}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1668106800, 'flash_sale_stock': 20, 'promotionid': 120222101303296, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1668099600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 990000000, 'stock': 20}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1668106800, 'flash_sale_stock': 100, 'promotionid': 117518211739649, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1668099600, 'promo_overlay_image': '52b8cc2a4881716e9e32e1b012e58fae', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1399000000, 'stock': 69}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1668106800, 'flash_sale_stock': 50, 'promotionid': 685739992274849, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1668099600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 42}",
-           "{'price_before_discount': 959000000, 'hidden_price_display': None, 'end_time': 1668132000, 'flash_sale_stock': 80, 'promotionid': 117518457102337, 'lowest_past_price': None, 'promo_images': ['b68671a9c8699b06e9dfd866925f2921'], 'start_time': 1668106800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 699900000, 'stock': 79}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1668132000, 'flash_sale_stock': 20, 'promotionid': 685393150548387, 'lowest_past_price': None, 'promo_images': ['7487eedc132cb36f2f6208b06fc828b0'], 'start_time': 1668106800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 679900000, 'stock': 17}",
-           "{'price_before_discount': 959000000, 'hidden_price_display': None, 'end_time': 1668132000, 'flash_sale_stock': 80, 'promotionid': 117518457102337, 'lowest_past_price': None, 'promo_images': ['b68671a9c8699b06e9dfd866925f2921'], 'start_time': 1668106800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 699900000, 'stock': 77}",
-           "{'price_before_discount': 1699000000, 'hidden_price_display': None, 'end_time': 1668142800, 'flash_sale_stock': 30, 'promotionid': 120222227116032, 'lowest_past_price': None, 'promo_images': ['bb637bbcfff75fb6ed60205b09fd0c00'], 'start_time': 1668132000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 849000000, 'stock': 29}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1668142800, 'flash_sale_stock': 200, 'promotionid': 120222227116032, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1668132000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 220000000, 'stock': 200}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1668150000, 'flash_sale_stock': 25, 'promotionid': 117535601274880, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1668142800, 'promo_overlay_image': '5a401bf5e4a25fe490b2c813f84b0315', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 908300000, 'stock': 25}",
-           "{'price_before_discount': 999000000, 'hidden_price_display': None, 'end_time': 1668150000, 'flash_sale_stock': 20, 'promotionid': 117535601274880, 'lowest_past_price': None, 'promo_images': ['7e57cbf5900076387da4da298ff931ec'], 'start_time': 1668142800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 659000000, 'stock': 17}",
-           "{'price_before_discount': 699900000, 'hidden_price_display': None, 'end_time': 1668150000, 'flash_sale_stock': 50, 'promotionid': 120222355079169, 'lowest_past_price': None, 'promo_images': ['77ea1e5671d8853acabaf9cb70778d2d'], 'start_time': 1668142800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 499900000, 'stock': 33}",
-           "{'price_before_discount': 1799000000, 'hidden_price_display': None, 'end_time': 1668150000, 'flash_sale_stock': 5, 'promotionid': 685898943813293, 'lowest_past_price': None, 'promo_images': ['1cdab576ea5a1c6fee7eb5546c532439'], 'start_time': 1668142800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1450000000, 'stock': 4}",
-           "{'price_before_discount': 959000000, 'hidden_price_display': None, 'end_time': 1668157200, 'flash_sale_stock': 100, 'promotionid': 120222365564928, 'lowest_past_price': None, 'promo_images': ['b68671a9c8699b06e9dfd866925f2921'], 'start_time': 1668150000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 699900000, 'stock': 96}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1668175200, 'flash_sale_stock': 50, 'promotionid': 120222409613312, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1668164400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1111000000, 'stock': 49}",
-           "{'price_before_discount': 519000000, 'hidden_price_display': None, 'end_time': 1668175200, 'flash_sale_stock': 5, 'promotionid': 686096937981661, 'lowest_past_price': None, 'promo_images': ['865b5c2978670e1d1eb728d08d54c9db'], 'start_time': 1668164400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 327000000, 'stock': 4}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1668175200, 'flash_sale_stock': 10, 'promotionid': 685896961954403, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1668164400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 10}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1668186000, 'flash_sale_stock': 100, 'promotionid': 117536140292096, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1668175200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1415000000, 'stock': 99}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1668186000, 'flash_sale_stock': 20, 'promotionid': 117536140292096, 'lowest_past_price': None, 'promo_images': ['b8f5d6f3cfe31e7764b725dcc8614868'], 'start_time': 1668175200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 879000000, 'stock': 19}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1668186000, 'flash_sale_stock': 25, 'promotionid': 117536140292096, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1668175200, 'promo_overlay_image': '5a401bf5e4a25fe490b2c813f84b0315', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 908300000, 'stock': 24}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1668186000, 'flash_sale_stock': 10, 'promotionid': 686125379605331, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1668175200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1050000000, 'stock': 10}",
-           "{'price_before_discount': 399000000, 'hidden_price_display': None, 'end_time': 1668186000, 'flash_sale_stock': 20, 'promotionid': 117536140292096, 'lowest_past_price': None, 'promo_images': ['de2af3edeabdbf5515f4d62c0287bee7'], 'start_time': 1668175200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 349000000, 'stock': 19}",
-           "{'price_before_discount': 999000000, 'hidden_price_display': None, 'end_time': 1668186000, 'flash_sale_stock': 20, 'promotionid': 117536140292096, 'lowest_past_price': None, 'promo_images': ['7e57cbf5900076387da4da298ff931ec'], 'start_time': 1668175200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 659000000, 'stock': 20}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1668250800, 'flash_sale_stock': 20, 'promotionid': 118805990961153, 'lowest_past_price': None, 'promo_images': ['b8f5d6f3cfe31e7764b725dcc8614868'], 'start_time': 1668229200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 879000000, 'stock': 20}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1668272400, 'flash_sale_stock': 30, 'promotionid': 118806508937216, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1668261600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 30}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1668402000, 'flash_sale_stock': 10, 'promotionid': 686168444574340, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1668358800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 990000000, 'stock': 10}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1668423600, 'flash_sale_stock': 20, 'promotionid': 686620500368093, 'lowest_past_price': None, 'promo_images': ['8790407e23b43b2675f7952bc4f7cdd6'], 'start_time': 1668402000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 289000000, 'stock': 19}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1668445200, 'flash_sale_stock': 20, 'promotionid': 686665865960353, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1668434400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1180000000, 'stock': 20}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1668452400, 'flash_sale_stock': 80, 'promotionid': 121308407160832, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1668445200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1090000000, 'stock': 80}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1668452400, 'flash_sale_stock': 10, 'promotionid': 686660893661011, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1668445200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 10}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1668452400, 'flash_sale_stock': 50, 'promotionid': 121308407160832, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1668445200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1129000000, 'stock': 49}",
-           "{'price_before_discount': 699900000, 'hidden_price_display': None, 'end_time': 1668477600, 'flash_sale_stock': 100, 'promotionid': 119121528471552, 'lowest_past_price': None, 'promo_images': ['77ea1e5671d8853acabaf9cb70778d2d'], 'start_time': 1668452400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 499900000, 'stock': 94}",
-           "{'price_before_discount': 699900000, 'hidden_price_display': None, 'end_time': 1668477600, 'flash_sale_stock': 100, 'promotionid': 119121528471552, 'lowest_past_price': None, 'promo_images': ['77ea1e5671d8853acabaf9cb70778d2d'], 'start_time': 1668452400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 499900000, 'stock': 92}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1668495600, 'flash_sale_stock': 20, 'promotionid': 119122023354368, 'lowest_past_price': None, 'promo_images': ['b8f5d6f3cfe31e7764b725dcc8614868'], 'start_time': 1668488400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 879000000, 'stock': 20}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1668495600, 'flash_sale_stock': 200, 'promotionid': 121308826607618, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1668488400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 220000000, 'stock': 200}",
-           "{'price_before_discount': 599000000, 'hidden_price_display': None, 'end_time': 1668510000, 'flash_sale_stock': 150, 'promotionid': 119122218414081, 'lowest_past_price': None, 'promo_images': ['880e0ff4e303a6edcf9f9d213e4a84e4'], 'start_time': 1668495600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 329900000, 'stock': 146}",
-           "{'price_before_discount': 959000000, 'hidden_price_display': None, 'end_time': 1668510000, 'flash_sale_stock': 50, 'promotionid': 121308946104321, 'lowest_past_price': None, 'promo_images': ['b68671a9c8699b06e9dfd866925f2921'], 'start_time': 1668495600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 699900000, 'stock': 50}",
-           "{'price_before_discount': 999000000, 'hidden_price_display': None, 'end_time': 1668510000, 'flash_sale_stock': 20, 'promotionid': 121308946104321, 'lowest_past_price': None, 'promo_images': ['7e57cbf5900076387da4da298ff931ec'], 'start_time': 1668495600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 659000000, 'stock': 20}",
-           "{'price_before_discount': 199000000, 'hidden_price_display': None, 'end_time': 1668520800, 'flash_sale_stock': 50, 'promotionid': 686610417260573, 'lowest_past_price': None, 'promo_images': ['d64b7f28c0174f976d5f9bc9ba112b2d'], 'start_time': 1668510000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 140000000, 'stock': 50}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1668531600, 'flash_sale_stock': 20, 'promotionid': 121309231370241, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1668520800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 990000000, 'stock': 20}",
-           "{'price_before_discount': 1699000000, 'hidden_price_display': None, 'end_time': 1668531600, 'flash_sale_stock': 30, 'promotionid': 121309231370241, 'lowest_past_price': None, 'promo_images': ['bb637bbcfff75fb6ed60205b09fd0c00'], 'start_time': 1668520800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 849000000, 'stock': 30}",
-           "{'price_before_discount': 399000000, 'hidden_price_display': None, 'end_time': 1668531600, 'flash_sale_stock': 15, 'promotionid': 119122549747713, 'lowest_past_price': None, 'promo_images': ['de2af3edeabdbf5515f4d62c0287bee7'], 'start_time': 1668520800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 349000000, 'stock': 15}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1668574800, 'flash_sale_stock': 20, 'promotionid': 120396211011585, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1668531600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 20}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1668574800, 'flash_sale_stock': 20, 'promotionid': 120396211011585, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1668531600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 19}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1668574800, 'flash_sale_stock': 20, 'promotionid': 120396211011585, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1668531600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 18}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1668596400, 'flash_sale_stock': 20, 'promotionid': 686983890673373, 'lowest_past_price': None, 'promo_images': ['8790407e23b43b2675f7952bc4f7cdd6'], 'start_time': 1668574800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 289000000, 'stock': 20}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1668596400, 'flash_sale_stock': 20, 'promotionid': 686983890673373, 'lowest_past_price': None, 'promo_images': ['8790407e23b43b2675f7952bc4f7cdd6'], 'start_time': 1668574800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 289000000, 'stock': 17}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1668618000, 'flash_sale_stock': 10, 'promotionid': 687025072495521, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1668607200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1180000000, 'stock': 10}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1668693600, 'flash_sale_stock': 30, 'promotionid': 120401403510785, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1668682800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1129000000, 'stock': 30}",
-           "{'price_before_discount': 2141400000, 'hidden_price_display': None, 'end_time': 1668693600, 'flash_sale_stock': 5, 'promotionid': 687161783687204, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1668682800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 5}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1668704400, 'flash_sale_stock': 10, 'promotionid': 687221403671379, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1668693600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 10}",
-           "{'price_before_discount': 1699000000, 'hidden_price_display': None, 'end_time': 1668704400, 'flash_sale_stock': 30, 'promotionid': 120402076725248, 'lowest_past_price': None, 'promo_images': ['bb637bbcfff75fb6ed60205b09fd0c00'], 'start_time': 1668693600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 849000000, 'stock': 30}",
-           "{'price_before_discount': 699900000, 'hidden_price_display': None, 'end_time': 1668780000, 'flash_sale_stock': 50, 'promotionid': 120402739421185, 'lowest_past_price': None, 'promo_images': ['77ea1e5671d8853acabaf9cb70778d2d'], 'start_time': 1668769200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 499900000, 'stock': 50}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1668790800, 'flash_sale_stock': 10, 'promotionid': 687379224846241, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1668780000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1180000000, 'stock': 10}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1668834000, 'flash_sale_stock': 5, 'promotionid': 687199614213764, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1668790800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 990000000, 'stock': 5}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1668834000, 'flash_sale_stock': 5, 'promotionid': 687199614213764, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1668790800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 990000000, 'stock': 4}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1668866400, 'flash_sale_stock': 20, 'promotionid': 120403278372864, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1668855600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 20}",
-           "{'price_before_discount': 2141400000, 'hidden_price_display': None, 'end_time': 1668877200, 'flash_sale_stock': 5, 'promotionid': 687567614106660, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1668866400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 5}",
-           "{'price_before_discount': 959000000, 'hidden_price_display': None, 'end_time': 1668920400, 'flash_sale_stock': 20, 'promotionid': 122578845044737, 'lowest_past_price': None, 'promo_images': ['b68671a9c8699b06e9dfd866925f2921'], 'start_time': 1668877200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 699900000, 'stock': 20}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1668920400, 'flash_sale_stock': 200, 'promotionid': 122578845044737, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1668877200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 220000000, 'stock': 200}",
-           "{'price_before_discount': 959000000, 'hidden_price_display': None, 'end_time': 1668920400, 'flash_sale_stock': 20, 'promotionid': 122578845044737, 'lowest_past_price': None, 'promo_images': ['b68671a9c8699b06e9dfd866925f2921'], 'start_time': 1668877200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 699900000, 'stock': 19}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1668942000, 'flash_sale_stock': 20, 'promotionid': 687554150391713, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1668920400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1180000000, 'stock': 20}",
-           "{'price_before_discount': 1699000000, 'hidden_price_display': None, 'end_time': 1668952800, 'flash_sale_stock': 30, 'promotionid': 122579092508673, 'lowest_past_price': None, 'promo_images': ['bb637bbcfff75fb6ed60205b09fd0c00'], 'start_time': 1668942000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 849000000, 'stock': 30}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1669028400, 'flash_sale_stock': 30, 'promotionid': 120406107471872, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1669006800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 30}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1669028400, 'flash_sale_stock': 30, 'promotionid': 120406107471872, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1669006800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 28}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1669050000, 'flash_sale_stock': 10, 'promotionid': 687932482902945, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1669039200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1180000000, 'stock': 10}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1669093200, 'flash_sale_stock': 30, 'promotionid': 120406841483265, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1669050000, 'promo_overlay_image': '9beb2804cf539d52301662af8f28965e', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1078200000, 'stock': 30}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1669093200, 'flash_sale_stock': 30, 'promotionid': 120406841483265, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1669050000, 'promo_overlay_image': '9beb2804cf539d52301662af8f28965e', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1078200000, 'stock': 27}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1669093200, 'flash_sale_stock': 30, 'promotionid': 120406841483265, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1669050000, 'promo_overlay_image': '9beb2804cf539d52301662af8f28965e', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1078200000, 'stock': 25}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1669093200, 'flash_sale_stock': 30, 'promotionid': 120406841483265, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1669050000, 'promo_overlay_image': '9beb2804cf539d52301662af8f28965e', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1078200000, 'stock': 24}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1669114800, 'flash_sale_stock': 20, 'promotionid': 688064425172701, 'lowest_past_price': None, 'promo_images': ['8790407e23b43b2675f7952bc4f7cdd6'], 'start_time': 1669093200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 289000000, 'stock': 20}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1669114800, 'flash_sale_stock': 20, 'promotionid': 688064425172701, 'lowest_past_price': None, 'promo_images': ['8790407e23b43b2675f7952bc4f7cdd6'], 'start_time': 1669093200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 289000000, 'stock': 19}",
-           "{'price_before_discount': 699900000, 'hidden_price_display': None, 'end_time': 1669125600, 'flash_sale_stock': 30, 'promotionid': 688112514961437, 'lowest_past_price': None, 'promo_images': ['77ea1e5671d8853acabaf9cb70778d2d'], 'start_time': 1669114800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 499900000, 'stock': 30}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1669136400, 'flash_sale_stock': 10, 'promotionid': 688102324952993, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1669125600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1150000000, 'stock': 10}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1669222800, 'flash_sale_stock': 10, 'promotionid': 688294998693793, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1669212000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1180000000, 'stock': 10}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1669266000, 'flash_sale_stock': 30, 'promotionid': 120456013385728, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1669222800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1129000000, 'stock': 30}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1669266000, 'flash_sale_stock': 40, 'promotionid': 688246632077341, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1669222800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 220000000, 'stock': 40}",
-           "{'price_before_discount': 1699000000, 'hidden_price_display': None, 'end_time': 1669287600, 'flash_sale_stock': 20, 'promotionid': 687201075976922, 'lowest_past_price': None, 'promo_images': ['bb637bbcfff75fb6ed60205b09fd0c00'], 'start_time': 1669266000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 849000000, 'stock': 18}",
-           "{'price_before_discount': 1699000000, 'hidden_price_display': None, 'end_time': 1669287600, 'flash_sale_stock': 20, 'promotionid': 687201075976922, 'lowest_past_price': None, 'promo_images': ['bb637bbcfff75fb6ed60205b09fd0c00'], 'start_time': 1669266000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 849000000, 'stock': 17}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1669309200, 'flash_sale_stock': 20, 'promotionid': 688464226226909, 'lowest_past_price': None, 'promo_images': ['8790407e23b43b2675f7952bc4f7cdd6'], 'start_time': 1669298400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 289000000, 'stock': 20}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1669352400, 'flash_sale_stock': 10, 'promotionid': 688459423801171, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1669309200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1050000000, 'stock': 10}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1669352400, 'flash_sale_stock': 50, 'promotionid': 688468693209699, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1669309200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 50}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1669352400, 'flash_sale_stock': 5, 'promotionid': 688253053556356, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1669309200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 990000000, 'stock': 4}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1669352400, 'flash_sale_stock': 5, 'promotionid': 688253053556356, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1669309200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 990000000, 'stock': 3}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1669374000, 'flash_sale_stock': 50, 'promotionid': 688463643270049, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1669352400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 50}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1669374000, 'flash_sale_stock': 30, 'promotionid': 123193253957632, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1669352400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1549000000, 'stock': 29}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1669374000, 'flash_sale_stock': 50, 'promotionid': 688463643270049, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1669352400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1090000000, 'stock': 50}",
-           "{'price_before_discount': 2141400000, 'hidden_price_display': None, 'end_time': 1669384800, 'flash_sale_stock': 5, 'promotionid': 688601730241572, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1669374000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1050000000, 'stock': 5}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1669471200, 'flash_sale_stock': 30, 'promotionid': 123214307315712, 'lowest_past_price': None, 'promo_images': ['sg-11134201-22110-rqlicwaxz6jvdb'], 'start_time': 1669460400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1129000000, 'stock': 30}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1669525200, 'flash_sale_stock': 20, 'promotionid': 120458257326080, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1669482000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 990000000, 'stock': 18}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1669525200, 'flash_sale_stock': 20, 'promotionid': 120458257326080, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1669482000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 990000000, 'stock': 17}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1669546800, 'flash_sale_stock': 50, 'promotionid': 688833710858145, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1669525200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1150000000, 'stock': 50}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1669546800, 'flash_sale_stock': 50, 'promotionid': 688833710858145, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1669525200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1150000000, 'stock': 48}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1669557600, 'flash_sale_stock': 30, 'promotionid': 120461742788610, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1669546800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 30}",
-           "{'price_before_discount': 1699000000, 'hidden_price_display': None, 'end_time': 1669557600, 'flash_sale_stock': 30, 'promotionid': 123215318093825, 'lowest_past_price': None, 'promo_images': ['bb637bbcfff75fb6ed60205b09fd0c00'], 'start_time': 1669546800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 849000000, 'stock': 30}",
-           "{'price_before_discount': 2141400000, 'hidden_price_display': None, 'end_time': 1669633200, 'flash_sale_stock': 5, 'promotionid': 689144479420452, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1669611600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 980000000, 'stock': 5}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1669644000, 'flash_sale_stock': 50, 'promotionid': 120462613118976, 'lowest_past_price': None, 'promo_images': ['82a15c99269e0bfbcf3d5c5ab37e7689'], 'start_time': 1669633200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 270400000, 'stock': 49}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1669654800, 'flash_sale_stock': 20, 'promotionid': 689201647785889, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1669644000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1180000000, 'stock': 19}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1669719600, 'flash_sale_stock': 30, 'promotionid': 120463162564608, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1669698000, 'promo_overlay_image': '9beb2804cf539d52301662af8f28965e', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1078200000, 'stock': 30}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1669719600, 'flash_sale_stock': 30, 'promotionid': 120463162564608, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1669698000, 'promo_overlay_image': '9beb2804cf539d52301662af8f28965e', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1078200000, 'stock': 26}",
-           "{'price_before_discount': 1699000000, 'hidden_price_display': None, 'end_time': 1669730400, 'flash_sale_stock': 30, 'promotionid': 124048770338817, 'lowest_past_price': None, 'promo_images': ['bb637bbcfff75fb6ed60205b09fd0c00'], 'start_time': 1669719600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 799000000, 'stock': 30}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1669806000, 'flash_sale_stock': 20, 'promotionid': 120463833661440, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1669784400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 20}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1669806000, 'flash_sale_stock': 20, 'promotionid': 689500158500451, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1669784400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 980000000, 'stock': 20}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1669806000, 'flash_sale_stock': 10, 'promotionid': 689495572022099, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1669784400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 970000000, 'stock': 10}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1669806000, 'flash_sale_stock': 20, 'promotionid': 689362363030433, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1669784400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 980000000, 'stock': 20}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1669806000, 'flash_sale_stock': 30, 'promotionid': 689362363030433, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1669784400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 970000000, 'stock': 30}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1669806000, 'flash_sale_stock': 30, 'promotionid': 689362363030433, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1669784400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 970000000, 'stock': 23}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1669806000, 'flash_sale_stock': 20, 'promotionid': 689362363030433, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1669784400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 980000000, 'stock': 19}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1669806000, 'flash_sale_stock': 20, 'promotionid': 120463833661440, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1669784400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1549000000, 'stock': 19}",
-           "{'price_before_discount': 2141400000, 'hidden_price_display': None, 'end_time': 1669816800, 'flash_sale_stock': 5, 'promotionid': 689198036491300, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1669806000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 980000000, 'stock': 5}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1669827600, 'flash_sale_stock': 20, 'promotionid': 120464072712192, 'lowest_past_price': None, 'promo_images': ['60aaea4fe52b112fca2bf6c02bf52da8'], 'start_time': 1669816800, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1489500000, 'stock': 20}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1669870800, 'flash_sale_stock': 10, 'promotionid': 689510923178628, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1669827600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 990000000, 'stock': 10}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1669914000, 'flash_sale_stock': 200, 'promotionid': 124401148497920, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1669903200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 220000000, 'stock': 200}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1669957200, 'flash_sale_stock': 50, 'promotionid': 124401769254913, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1669914000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1129000000, 'stock': 50}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1669957200, 'flash_sale_stock': 50, 'promotionid': 124401769254913, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1669914000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1129000000, 'stock': 46}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1669957200, 'flash_sale_stock': 50, 'promotionid': 124401769254913, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1669914000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 1129000000, 'stock': 44}",
-           "{'price_before_discount': 2600000000, 'hidden_price_display': None, 'end_time': 1669978800, 'flash_sale_stock': 5, 'promotionid': 689862120636525, 'lowest_past_price': None, 'promo_images': ['b8f5d6f3cfe31e7764b725dcc8614868'], 'start_time': 1669957200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 879000000, 'stock': 5}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1670043600, 'flash_sale_stock': 5, 'promotionid': 689892489502340, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1670000400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 990000000, 'stock': 5}",
-           "{'price_before_discount': 1999900000, 'hidden_price_display': None, 'end_time': 1670043600, 'flash_sale_stock': 5, 'promotionid': 689892489502340, 'lowest_past_price': None, 'promo_images': ['553f9ee3347a361ed88d6e1dff363a83'], 'start_time': 1670000400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 990000000, 'stock': 4}",
-           "{'price_before_discount': 2141400000, 'hidden_price_display': None, 'end_time': 1670065200, 'flash_sale_stock': 5, 'promotionid': 690062969082916, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1670043600, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 980000000, 'stock': 5}",
-           "{'price_before_discount': 1700000000, 'hidden_price_display': None, 'end_time': 1670086800, 'flash_sale_stock': 10, 'promotionid': 690100774439841, 'lowest_past_price': None, 'promo_images': ['4be03248bfbc47be3234d3a451b79f25'], 'start_time': 1670076000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1150000000, 'stock': 10}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1670151600, 'flash_sale_stock': 10, 'promotionid': 690064401435475, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1670130000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 980000000, 'stock': 10}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1670151600, 'flash_sale_stock': 50, 'promotionid': 689865738230813, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1670130000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 209900000, 'stock': 50}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1670151600, 'flash_sale_stock': 5, 'promotionid': 690100600374177, 'lowest_past_price': None, 'promo_images': ['8c859232df55bbc4b2df09031fe3e0d1'], 'start_time': 1670130000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1180000000, 'stock': 5}",
-           "{'price_before_discount': 269900000, 'hidden_price_display': None, 'end_time': 1670151600, 'flash_sale_stock': 50, 'promotionid': 689865738230813, 'lowest_past_price': None, 'promo_images': ['dac30dea362444b3186770eb5bd4df22'], 'start_time': 1670130000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 209900000, 'stock': 49}",
-           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1670151600, 'flash_sale_stock': 10, 'promotionid': 690064401435475, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1670130000, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 980000000, 'stock': 9}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1670216400, 'flash_sale_stock': 50, 'promotionid': 122444895735809, 'lowest_past_price': None, 'promo_images': ['82a15c99269e0bfbcf3d5c5ab37e7689'], 'start_time': 1670173200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 289000000, 'stock': 49}",
-           "{'price_before_discount': 199000000, 'hidden_price_display': None, 'end_time': 1670216400, 'flash_sale_stock': 80, 'promotionid': 125155926134785, 'lowest_past_price': None, 'promo_images': ['d64b7f28c0174f976d5f9bc9ba112b2d'], 'start_time': 1670173200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 139900000, 'stock': 80}",
-           "{'price_before_discount': 199000000, 'hidden_price_display': None, 'end_time': 1670216400, 'flash_sale_stock': 80, 'promotionid': 125155926134785, 'lowest_past_price': None, 'promo_images': ['d64b7f28c0174f976d5f9bc9ba112b2d'], 'start_time': 1670173200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 139900000, 'stock': 79}",
-           "{'price_before_discount': 409000000, 'hidden_price_display': None, 'end_time': 1670216400, 'flash_sale_stock': 50, 'promotionid': 122444895735809, 'lowest_past_price': None, 'promo_images': ['82a15c99269e0bfbcf3d5c5ab37e7689'], 'start_time': 1670173200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 289000000, 'stock': 47}",
-           "{'price_before_discount': 199000000, 'hidden_price_display': None, 'end_time': 1670216400, 'flash_sale_stock': 80, 'promotionid': 125155926134785, 'lowest_past_price': None, 'promo_images': ['d64b7f28c0174f976d5f9bc9ba112b2d'], 'start_time': 1670173200, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 1, 'price': 139900000, 'stock': 78}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1670302800, 'flash_sale_stock': 50, 'promotionid': 122446376275969, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1670259600, 'promo_overlay_image': '9beb2804cf539d52301662af8f28965e', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1008200000, 'stock': 50}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1670302800, 'flash_sale_stock': 50, 'promotionid': 122446376275969, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1670259600, 'promo_overlay_image': '9beb2804cf539d52301662af8f28965e', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1008200000, 'stock': 47}",
-           "{'price_before_discount': 1499000000, 'hidden_price_display': None, 'end_time': 1670302800, 'flash_sale_stock': 50, 'promotionid': 122446376275969, 'lowest_past_price': None, 'promo_images': ['db1455ff51f4185d24ebdf8475dd1ecd'], 'start_time': 1670259600, 'promo_overlay_image': '9beb2804cf539d52301662af8f28965e', 'extra_discount_info': None, 'flash_sale_type': 0, 'price': 1008200000, 'stock': 45}"],
+           "{'price_before_discount': 2141900000, 'hidden_price_display': None, 'end_time': 1662663600, 'flash_sale_stock': 10, 'promotionid': 674491900713811, 'lowest_past_price': None, 'promo_images': None, 'start_time': 1662656400, 'promo_overlay_image': None, 'extra_discount_info': None, 'flash_sale_type': 2, 'price': 1190000000, 'stock': 9}"],
           dtype=object)
 
 
+
+เราจะเลือกเฉพาะ Transaction ที่มีการทำแฟลชเซล
 
 
 ```python
@@ -1349,206 +909,8 @@ fs_groupby_DH = fs_groupby_DH.reset_index()
 
 
 ```python
-fs_groupby_DH
-```
-
-
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>modelid</th>
-      <th>day_hour</th>
-      <th>count_dh</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>21190966793</td>
-      <td>05-00</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>21190966793</td>
-      <td>05-03</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>21190966793</td>
-      <td>05-09</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>21190966793</td>
-      <td>10-00</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>21190966793</td>
-      <td>10-01</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-    </tr>
-    <tr>
-      <th>515</th>
-      <td>172837567688</td>
-      <td>11-18</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>516</th>
-      <td>172837567688</td>
-      <td>15-00</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>517</th>
-      <td>172837567688</td>
-      <td>25-00</td>
-      <td>2</td>
-    </tr>
-    <tr>
-      <th>518</th>
-      <td>172837567688</td>
-      <td>30-12</td>
-      <td>2</td>
-    </tr>
-    <tr>
-      <th>519</th>
-      <td>172837567688</td>
-      <td>31-00</td>
-      <td>1</td>
-    </tr>
-  </tbody>
-</table>
-<p>520 rows × 3 columns</p>
-</div>
-
-
-
-
-```python
 most_flash_sale = fs_groupby_DH.groupby(['day_hour'])[['count_dh']].sum().reset_index()
 ```
-
-
-```python
-most_flash_sale
-```
-
-
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>day_hour</th>
-      <th>count_dh</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>01-00</td>
-      <td>2</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>01-04</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>01-09</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>01-10</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>01-18</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td>...</td>
-      <td>...</td>
-    </tr>
-    <tr>
-      <th>276</th>
-      <td>31-11</td>
-      <td>2</td>
-    </tr>
-    <tr>
-      <th>277</th>
-      <td>31-12</td>
-      <td>3</td>
-    </tr>
-    <tr>
-      <th>278</th>
-      <td>31-13</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>279</th>
-      <td>31-14</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>280</th>
-      <td>31-16</td>
-      <td>1</td>
-    </tr>
-  </tbody>
-</table>
-<p>281 rows × 2 columns</p>
-</div>
-
-
 
 
 ```python
@@ -1656,11 +1018,9 @@ most_flash_sale
 
 
 
-## Top 10 flash sale frequency by day_hour
-
 
 ```python
-fig = plt.figure(figsize = (10, 5))
+fig = plt.figure(figsize = (15, 6))
 freq = plt.bar(most_flash_sale['day_hour'][:10], most_flash_sale['count_dh'][:10], color ='c',
         width = 0.4)
 
@@ -1686,20 +1046,15 @@ plt.ylabel('count transaction of flash sale')
 
 
     
-![png](output_27_1.png)
+![png](output_30_1.png)
     
 
 
-The most popular time to do a flash sale is the 15th of the month at 3pm, followed by the 15th day at midnight and the 15th is the middle of the month. Therefore, during the middle of the sale, it will be popular to do at the time. Midnight and 3pm.
+วันและเวลาที่มีการทำแฟลชเซลบ่อยที่สุดโดยนับจาก Transaction ของสินค้าที่มีการทำแฟลชเซล คือวันที่ 25 เที่ยงคืนกับ 15 เที่ยงคืน (เนื่องจาก 25 เป็นวันที่จัด PayDay campaign และ 15 เป็นวันที่จัด Mid month campaign)
 
-As for PayDay sale (25th until the end of the month), it is popular to do flash sale during noon and midnight.
+##  2. Compare 3 sales campaigns
 
-##  Compare 3 sales campaigns
-
-Shopee have 3 sales campaigns
-1. Mega sale: day = month
-2. Mid month sale: Every 15th day of the month
-3. Payday sale: Every 25th until the end of the month
+เปรียบเทียบ 3 แคมเปญลดราคาสินค้า หาว่าแคมเปญไหนมีการทำแฟลชเซลบ่อยที่สุด
 
 
 ```python
@@ -1754,14 +1109,26 @@ pay_day_sale_fr
 
 
 ```python
-fig = plt.figure(figsize = (10, 5))
+fig = plt.figure(figsize = (15, 6))
 freq = plt.bar(['Mega campaign','Mid Month campaign','PayDay campaign'], [mega_sale_fr,mid_month_sale_fr,pay_day_sale_fr], color ='c',
         width = 0.4)
-
+all_freq = 0   #mega_sale_fr+mid_month_sale_fr+pay_day_sale_fr
+for i in freq:
+    height = i.get_height()
+#     print(height)
+    all_freq+= height
+    
+# print(all_freq)
 for f in freq:
     height = f.get_height()
     plt.annotate(f'{height:.0f}',
                 xy=(f.get_x() + f.get_width() / 2, height),
+                xytext=(0, 3),
+                textcoords="offset points",
+                ha='center', va='bottom')
+    
+    plt.annotate(f'{((height)/all_freq*100):.0f}%',
+                xy=(f.get_x() + f.get_width() / 2, height/2),
                 xytext=(0, 3),
                 textcoords="offset points",
                 ha='center', va='bottom')
@@ -1780,15 +1147,94 @@ plt.ylabel('Count transaction of flash sale', fontsize=15)
 
 
     
-![png](output_35_1.png)
+![png](output_38_1.png)
     
 
 
-An overview of the campaigns that have a lot of flash sales are payday campaign (This campaign has several days, so there may be many transactions), followed by a mega sale campaign.
+ภาพรวมของแต่ละแคมเปญที่มีการทำแฟลชเซล Payday แคมเปญมีการทำแฟลชเซลเยอะที่สุดเนื่องจากมีการจัดแคมเปญหลายวัน รองลงมาคือ Mega sale แคมเปญ
 
-## Details of Payday campaign (Payday campaign has several campaign periods.)
+## 3. Details of Payday campaign (Payday campaign has several campaign periods.)
+PayDay แคมเปญมีระยะเวลาที่จัดแคมเปญหลายวันกว่าแคมเปญอื่นๆ จึงดูเพิ่มว่าช่วงวันและเวลาไหนที่นิยมทำแฟลชเซล
 
-###  Freqency by day and hour
+### 3.1 Frequency by hour
+
+
+```python
+pay_day_sale = df[(df['day']>=25)&(df['flash_sale'].notna())].drop_duplicates(subset=['flash_sale'],keep='first').groupby(['hour'])[['hour']].count().rename(columns={'hour':'count'}).reset_index()
+pay_day_sale = pay_day_sale.sort_values(by=['count'],ascending=False).reset_index()
+pay_day_sale
+
+fig = plt.figure(figsize = (15, 6))
+freq = plt.bar(pay_day_sale['hour'][:10], pay_day_sale['count'][:10], color ='c',
+        width = 0.4)
+
+for f in freq:
+    height = f.get_height()
+    plt.annotate(f'{height:.0f}',
+                xy=(f.get_x() + f.get_width() / 2, height),
+                xytext=(0, 3),
+                textcoords="offset points",
+                ha='center', va='bottom')
+    
+_ = plt.xticks(pay_day_sale['hour'])
+fig.suptitle('Frequency transaction product of PayDay sales campaign', fontsize=17)
+plt.xlabel('Hour', fontsize=15)
+plt.ylabel('Count transaction of flash sale', fontsize=15)
+```
+
+
+
+
+    Text(0, 0.5, 'Count transaction of flash sale')
+
+
+
+
+    
+![png](output_42_1.png)
+    
+
+
+### 3.2 Frequency by day
+
+
+```python
+pay_day_sale = df[(df['day']>=25)&(df['flash_sale'].notna())].drop_duplicates(subset=['flash_sale'],keep='first').groupby(['day'])[['day']].count().rename(columns={'day':'count'}).reset_index()
+pay_day_sale = pay_day_sale.sort_values(by=['count'],ascending=False).reset_index()
+pay_day_sale
+
+fig = plt.figure(figsize = (15, 6))
+freq = plt.bar(pay_day_sale['day'][:10], pay_day_sale['count'][:10], color ='c',
+        width = 0.4)
+
+for f in freq:
+    height = f.get_height()
+    plt.annotate(f'{height:.0f}',
+                xy=(f.get_x() + f.get_width() / 2, height),
+                xytext=(0, 3),
+                textcoords="offset points",
+                ha='center', va='bottom')
+    
+_ = plt.xticks(pay_day_sale['day'])
+fig.suptitle('Frequency transaction product of PayDay sales campaign', fontsize=17)
+plt.xlabel('Day', fontsize=15)
+plt.ylabel('Count transaction of flash sale', fontsize=15)
+```
+
+
+
+
+    Text(0, 0.5, 'Count transaction of flash sale')
+
+
+
+
+    
+![png](output_44_1.png)
+    
+
+
+###  3.3 Frequency by day and hour
 
 
 ```python
@@ -1796,7 +1242,7 @@ pay_day_sale = df[(df['day']>=25)&(df['flash_sale'].notna())].drop_duplicates(su
 pay_day_sale['day_hour'] = pay_day_sale['day'].astype(str) +'-' +pay_day_sale['hour'].astype(str)
 pay_day_sale = pay_day_sale.sort_values(by=['count'],ascending=False).reset_index()
 
-fig = plt.figure(figsize = (10, 5))
+fig = plt.figure(figsize = (15, 6))
 freq = plt.bar(pay_day_sale['day_hour'][:10], pay_day_sale['count'][:10], color ='c',
         width = 0.4)
 
@@ -1822,99 +1268,21 @@ plt.ylabel('Count transaction of flash sale', fontsize=15)
 
 
     
-![png](output_39_1.png)
+![png](output_46_1.png)
     
 
 
-### Freqency by hour
+แคมเปญการขาย PayDay
 
+3.1 ชั่วโมงที่นิยมทำแฟลชเซลคือ 12:00 น. 00:00 น. 18:00 น. และ 15:00 น. ตามลำดับ พฤติกรรมการขายส่วนใหญ่จะห่างกันทุกสามชั่วโมง
 
-```python
-pay_day_sale = df[(df['day']>=25)&(df['flash_sale'].notna())].drop_duplicates(subset=['flash_sale'],keep='first').groupby(['hour'])[['hour']].count().rename(columns={'hour':'count'}).reset_index()
-pay_day_sale = pay_day_sale.sort_values(by=['count'],ascending=False).reset_index()
-pay_day_sale
+3.2 วันที่ขายแฟลชสูงสุดในช่วง Payday คือวันที่ 25 (วันแรกของแคมเปญการขาย PayDay), 30, 27 ตามลำดับ
 
-fig = plt.figure(figsize = (10, 5))
-freq = plt.bar(pay_day_sale['hour'][:10], pay_day_sale['count'][:10], color ='c',
-        width = 0.4)
+3.3 วันและชั่วโมงการขายแฟลชสูงสุดในช่วง Payday คือ 25-00:00 น., 30-12:00 น., 25-12:00 น., 27-12:00 น. ตามลำดับ
 
-for f in freq:
-    height = f.get_height()
-    plt.annotate(f'{height:.0f}',
-                xy=(f.get_x() + f.get_width() / 2, height),
-                xytext=(0, 3),
-                textcoords="offset points",
-                ha='center', va='bottom')
-    
-_ = plt.xticks(pay_day_sale['hour'])
-fig.suptitle('Frequency transaction product of PayDay sales campaign', fontsize=17)
-plt.xlabel('Day and hour', fontsize=15)
-plt.ylabel('Count transaction of flash sale', fontsize=15)
-```
+# 4. Flash sale duration time 
 
-
-
-
-    Text(0, 0.5, 'Count transaction of flash sale')
-
-
-
-
-    
-![png](output_41_1.png)
-    
-
-
-### Freqency by day
-
-
-```python
-pay_day_sale = df[(df['day']>=25)&(df['flash_sale'].notna())].drop_duplicates(subset=['flash_sale'],keep='first').groupby(['day'])[['day']].count().rename(columns={'day':'count'}).reset_index()
-pay_day_sale = pay_day_sale.sort_values(by=['count'],ascending=False).reset_index()
-pay_day_sale
-
-fig = plt.figure(figsize = (10, 5))
-freq = plt.bar(pay_day_sale['day'][:10], pay_day_sale['count'][:10], color ='c',
-        width = 0.4)
-
-for f in freq:
-    height = f.get_height()
-    plt.annotate(f'{height:.0f}',
-                xy=(f.get_x() + f.get_width() / 2, height),
-                xytext=(0, 3),
-                textcoords="offset points",
-                ha='center', va='bottom')
-    
-_ = plt.xticks(pay_day_sale['day'])
-fig.suptitle('Frequency transaction product of PayDay sales campaign', fontsize=17)
-plt.xlabel('Day and hour', fontsize=15)
-plt.ylabel('Count transaction of flash sale', fontsize=15)
-```
-
-
-
-
-    Text(0, 0.5, 'Count transaction of flash sale')
-
-
-
-
-    
-![png](output_43_1.png)
-    
-
-
-PayDay sales campaign
-
-1.1 Most popular hour to do flash sale is 12:00, 00:00, 18:00 and 15:00 respectively. Most sales behaviors are every three hours apart.
-
-1.2 The date of the flash sale The highest during Payday is the 25th (First date of PayDay sales campaign).
-
-1.3 The peak flash sale days and hour during Payday are 25th-00:00, 30th-12:00, 25th-12:00, 27th-12:00 respectively.
-
-# Flash sale duration time 
-
-The duration time of the flash sale divided by each campaign.
+แต่ละแคมเปญส่วนมากทำแฟลชเซลกี่ชั่วโมงโดยเฉลี่ย
 
 
 ```python
@@ -1965,7 +1333,7 @@ pay_day_sale_df['duration'].mean()
 
 
 ```python
-fig = plt.figure(figsize = (10, 5))
+fig = plt.figure(figsize = (15, 6))
 freq = plt.bar(['Mega campaign','Mid month campaign','PayDay campaign'],
         [mega_sale_df['duration'].mean(),mid_month_sale_df['duration'].mean(),pay_day_sale_df['duration'].mean()], 
         color ='c',
@@ -1973,7 +1341,7 @@ freq = plt.bar(['Mega campaign','Mid month campaign','PayDay campaign'],
 
 for f in freq:
     height = f.get_height()
-    plt.annotate(f'{height:.0f}',
+    plt.annotate(f'{height:.2f} Hour',
                 xy=(f.get_x() + f.get_width() / 2, height),
                 xytext=(0, 3),
                 textcoords="offset points",
@@ -1993,11 +1361,17 @@ plt.ylabel('Duration time (Hours)', fontsize=15)
 
 
     
-![png](output_50_1.png)
+![png](output_53_1.png)
     
 
 
-## Pattern of the flash sale hour of each campaign.
+PayDay มีการทำแฟลชเซลระยะเวลานานที่สุดคือประมาณ 8 ชั่วโมงต่อการทำแฟลชเซล1ครั้ง
+รองลงมาด้วย Mid month แคมเปญ คือ4 ชั่วโมงและ Mega 3ชั่วโมง
+
+จากการสำรวจข้อมูลพบว่า Mega sale จะแฟลชเซลในระยะสั้นกว่าและมีจำนวนการแฟลชเซลบ่อยกว่า Mid month sale
+
+## 5. Pattern of the flash sale hour of each campaign.
+แต่ละแคมเปญมีพฤติกรรมการทำแฟลชเซลช่วงเวลาไหนเท่าไหร่บ้าง
 
 
 ```python
@@ -2051,31 +1425,33 @@ plt.ylabel('Number of transactions', fontsize=15)
 
 
     
-![png](output_54_1.png)
+![png](output_58_1.png)
     
 
 
-The overall picture of flash sales is popular during 02:00 (may have started flash sales since midnight or 1am), 9A.M., 12:00, 14:00, 16:00 , 18:00
+ภาพรวมของการขายแฟลชเป็นที่นิยมในช่วงเวลา 02:00 น. (อาจเริ่มขายแฟลชเซลตั้งแต่เที่ยงคืนหรือ 01.00 น.) รองลงมาคือ 9.00 น., 12.00 น., 14.00 น., 16.00 น., 18.00 น. ตามลำดับ 
 
-By campaign: Mega Campaign and Mid month Campaign, There is a flash sale at each period that is similar. Is to focus on doing during the night. As for Payday campaign, there will be a different pattern. That is, there will be the most flash sales in the daytime at 12:00 and again at 18:00.
+ตามแคมเปญ Mega Campaign และ Mid month Campaign จะมี flash sale ในแต่ละช่วงใกล้เคียงกันและเน้นทำแฟลชเซลช่วงกลางคืน. 
+สำหรับแคมเปญ Payday จะมีรูปแบบที่แตกต่างไปคือจะมีการขายแฟลชมากที่สุดในตอนกลางวัน ที่เวลา 12:00 น. และอีกครั้งเวลา 18:00 น.
 
-# Explore by Brand
+# 6. Explore by Brand 
+สำรวจแบรนด์สินค้าที่เป็น Official เทียบกับแบรนด์ Unofficial ว่ามีพฤติกรรมการลดราคาในแต่ละแคมเปญแตกต่างกันหรือไม่
+
+
 Explore the discounting behavior of brands selling on the platform.
 
 
 ```python
-# All brand in dataframe (Filter only transaction that flash sale)
-
 brand = [i for i in df['brand'].dropna().unique().tolist()]
 
-brand_count = [len(df[df['brand']==i]['itemid'].unique()) for i in brand]
+brand_count = [len(df[df['brand']==i]['shopid'].unique()) for i in brand]
 brand_count
 ```
 
 
 
 
-    [10, 4, 8, 1, 2, 4, 2, 1]
+    [9, 4, 3, 1, 1, 3, 2, 1]
 
 
 
@@ -2083,8 +1459,8 @@ brand_count
 ```python
 df_brand = pd.DataFrame()
 df_brand['brand'] = brand
-df_brand['countd_itemid'] = [len(df[df['brand']==i]['itemid'].unique()) for i in brand]
-df_brand['count_itemid']  = [len(df[df['brand']==i]['itemid']) for i in brand]
+df_brand['countd_shopid'] = [len(df[df['brand']==i]['shopid'].unique()) for i in brand]
+df_brand['count_shopid']  = [len(df[df['brand']==i]['shopid']) for i in brand]
 df_brand
 ```
 
@@ -2110,15 +1486,15 @@ df_brand
     <tr style="text-align: right;">
       <th></th>
       <th>brand</th>
-      <th>countd_itemid</th>
-      <th>count_itemid</th>
+      <th>countd_shopid</th>
+      <th>count_shopid</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
       <td>Petkit(เพ็ทคิท)</td>
-      <td>10</td>
+      <td>9</td>
       <td>11140</td>
     </tr>
     <tr>
@@ -2130,7 +1506,7 @@ df_brand
     <tr>
       <th>2</th>
       <td>Xiaomi(เสี่ยวมี่)</td>
-      <td>8</td>
+      <td>3</td>
       <td>6529</td>
     </tr>
     <tr>
@@ -2142,13 +1518,13 @@ df_brand
     <tr>
       <th>4</th>
       <td>Pando(แพนโด้)</td>
-      <td>2</td>
+      <td>1</td>
       <td>2234</td>
     </tr>
     <tr>
       <th>5</th>
       <td>Haier(ไฮเออร์)</td>
-      <td>4</td>
+      <td>3</td>
       <td>3027</td>
     </tr>
     <tr>
@@ -2179,11 +1555,13 @@ _ = plt.pie(brand_count, labels = label , autopct=lambda p: '{:.2f}%'.format(p),
 
 
     
-![png](output_59_0.png)
+![png](output_63_0.png)
     
 
 
-Compare between Mall official shop and unofficial shop (Not Mall)
+แบรนด์ Petkit มีจำนวนร้านค้ามากที่สุด (มีการแข่งขันที่สูง) รองลงมาคือ Amazfit 
+
+###  Compare between official shop and unofficial shop
 
 
 ```python
@@ -2456,7 +1834,7 @@ official
 ```python
 from matplotlib.pyplot import figure
 
-figure(figsize=(20, 10), dpi=200)
+figure(figsize=(15, 6), dpi=200)
 
 x_labels = [i.split('(')[0] for i in official['brand'].unique().tolist()]
 
@@ -2492,13 +1870,15 @@ plt.show()
 
 
     
-![png](output_66_0.png)
+![png](output_71_0.png)
     
 
 
+ในข้อมูลที่เรามีจะมีแบรนด์ Petkit ที่มีจำนวน official Mall และ Unofficial Mallที่พอๆกัน นอกจากนั้นจำนวนร้านส่วนใหญ่ในแต่ละแบรนด์จะเป็น official mall ส่วนใหญ่
+
 ## Campaign styles for each brand
 
-### Official/Mall Brand
+#### Official Brand
 
 
 ```python
@@ -2600,46 +1980,7 @@ count_overall_sale_mall
 
 
 
-
-```python
-figure(figsize=(20, 10), dpi=200)
-
-label = [i.split('(')[0] for i in count_overall_sale_mall['brand']]
-ax1 = plt.bar(label, count_overall_sale_mall['count_mega_sale'], color='lightsalmon', label='Mega sale campaign')
-ax2 = plt.bar(label, count_overall_sale_mall['count_mid_month'], bottom=count_overall_sale_mall['count_mega_sale'], color='lightblue', label='Mid Month sale campaign')
-ax3 = plt.bar(label, count_overall_sale_mall['count_pay_day'], bottom=count_overall_sale_mall['count_mega_sale']+count_overall_sale_mall['count_mid_month'], color='pink',label='PayDay sale campaign')
-plt.title('Number of Items in Official Mall Brand', fontsize=17)
-plt.xlabel('Brand', fontsize=15)
-plt.ylabel('Number of items', fontsize=15)
-
-for r1, r2, r3 in zip(ax1, ax2, ax3):
-    h1 = r1.get_height()
-    h2 = r2.get_height()
-    h3 = r3.get_height()
-
-    plt.text(r1.get_x() + r1.get_width() / 2., h1 / 2., "{0:.2f}%".format((h1/(h1+h2+h3))*100), ha="center", va="center", color="black", fontsize=14)
-    plt.text(r2.get_x() + r2.get_width() / 2., h1 + h2 / 2., "{0:.2f}%".format((h2/(h1+h2+h3))*100), ha="center", va="center", color="black", fontsize=14)
-    plt.text(r3.get_x() + r2.get_width() / 2., h1 + h2 + h3 / 2., "{0:.2f}%".format((h3/(h1+h2+h3))*100), ha="center", va="center", color="black", fontsize=14)
-
-plt.legend()
-
-a = plt.show()
-```
-
-
-    
-![png](output_70_0.png)
-    
-
-
-Campaign types are divided as follows
-
-Popular brands doing sales in :
-- Mega campaign (red): Ecovacs, Mister Robot, Xiaomi
-- Mid month campaign (blue): -
-- Payday campaign (green): Amazfit, Haier, Pandp, Petkit
-
-### Unofficial/Not mall brand
+#### Unofficial brand
 
 
 ```python
@@ -2701,38 +2042,74 @@ count_overall_sale_not_mall
 
 
 ```python
-figure(figsize=(5, 5))
+# figure(figsize=(20, 10), dpi=200)
 
-label = [i.split('(')[0] for i in count_overall_sale_not_mall['brand']]
-ax1 = plt.bar(label, count_overall_sale_not_mall['count_mega_sale'], color='lightsalmon', label = 'Mega sale campaign')
-ax2 = plt.bar(label, count_overall_sale_not_mall['count_mid_month'], bottom=count_overall_sale_not_mall['count_mega_sale'], color='lightblue', label = 'Mid month sale campaign')
-ax3 = plt.bar(label, count_overall_sale_not_mall['count_pay_day'], bottom=count_overall_sale_not_mall['count_mega_sale']+count_overall_sale_not_mall['count_mid_month'], color='pink', label = 'PayDay sale campaign')
-plt.title('Number of Items in Unofficial/Not mall Brand', fontsize=17)
-plt.xlabel('Brand', fontsize=15)
-plt.ylabel('Number of items', fontsize=15)
+fig, (a1, a2) = plt.subplots(1, 2,sharey=True,figsize=(20, 15), dpi=200,gridspec_kw={'width_ratios': [3, 0.5]})
+a2.yaxis.set_tick_params(which='both', labelbottom=True)
+
+label = [i.split('(')[0] for i in count_overall_sale_mall['brand']]
+ax1 = a1.bar(label, count_overall_sale_mall['count_mega_sale'], color='lightsalmon', label='Mega sale campaign')
+ax2 = a1.bar(label, count_overall_sale_mall['count_mid_month'], bottom=count_overall_sale_mall['count_mega_sale'], color='lightblue', label='Mid Month sale campaign')
+ax3 = a1.bar(label, count_overall_sale_mall['count_pay_day'], bottom=count_overall_sale_mall['count_mega_sale']+count_overall_sale_mall['count_mid_month'], color='pink',label='PayDay sale campaign')
+a1.set_title('Number of Items in Official Mall Brand', size=20)
+a1.set_xlabel('Brand', size=20)
+a1.set_ylabel('Number of items', size=20)
 
 for r1, r2, r3 in zip(ax1, ax2, ax3):
     h1 = r1.get_height()
     h2 = r2.get_height()
     h3 = r3.get_height()
 
-    plt.text(r1.get_x() + r1.get_width() / 2., h1 / 2., "{0:.2f}%".format((h1/(h1+h2+h3))*100), ha="center", va="center", color="black", fontsize=14)
-    plt.text(r2.get_x() + r2.get_width() / 2., h1 + h2 / 2., "{0:.2f}%".format((h2/(h1+h2+h3))*100), ha="center", va="center", color="black", fontsize=14)
-    plt.text(r3.get_x() + r2.get_width() / 2., h1 + h2 + h3 / 2., "{0:.2f}%".format((h3/(h1+h2+h3))*100), ha="center", va="center", color="black", fontsize=14)
+    a1.text(r1.get_x() + r1.get_width() / 2., h1 / 2., "{0:.2f}%".format((h1/(h1+h2+h3))*100), ha="center", va="center", color="black", fontsize=14)
+    a1.text(r2.get_x() + r2.get_width() / 2., h1 + h2 / 2., "{0:.2f}%".format((h2/(h1+h2+h3))*100), ha="center", va="center", color="black", fontsize=14)
+    a1.text(r3.get_x() + r2.get_width() / 2., h1 + h2 + h3 / 2., "{0:.2f}%".format((h3/(h1+h2+h3))*100), ha="center", va="center", color="black", fontsize=14)
 
-plt.legend()
-a = plt.show()
+a1.legend(prop={'size': 15})
+
+# a = plt.show()
+
+
+label = [i.split('(')[0] for i in count_overall_sale_not_mall['brand']]
+ax1 = a2.bar(label, count_overall_sale_not_mall['count_mega_sale'], color='lightsalmon', label = 'Mega sale campaign')
+ax2 = a2.bar(label, count_overall_sale_not_mall['count_mid_month'], bottom=count_overall_sale_not_mall['count_mega_sale'], color='lightblue', label = 'Mid month sale campaign')
+ax3 = a2.bar(label, count_overall_sale_not_mall['count_pay_day'], bottom=count_overall_sale_not_mall['count_mega_sale']+count_overall_sale_not_mall['count_mid_month'], color='pink', label = 'PayDay sale campaign')
+a2.set_title('Number of Items in Unofficial/Not mall Brand', size=20)
+a2.set_xlabel('Brand', size=20)
+a2.set_ylabel('Number of items', size=20)
+
+for r1, r2, r3 in zip(ax1, ax2, ax3):
+    h1 = r1.get_height()
+    h2 = r2.get_height()
+    h3 = r3.get_height()
+
+    a2.text(r1.get_x() + r1.get_width() / 2., h1 / 2., "{0:.2f}%".format((h1/(h1+h2+h3))*100), ha="center", va="center", color="black", fontsize=14)
+    a2.text(r2.get_x() + r2.get_width() / 2., h1 + h2 / 2., "{0:.2f}%".format((h2/(h1+h2+h3))*100), ha="center", va="center", color="black", fontsize=14)
+    a2.text(r3.get_x() + r2.get_width() / 2., h1 + h2 + h3 / 2., "{0:.2f}%".format((h3/(h1+h2+h3))*100), ha="center", va="center", color="black", fontsize=14)
+
+a2.legend(prop={'size': 15})
+
+a1.tick_params(axis='both', labelsize=15)
+a2.tick_params(axis='both', labelsize=15)
+# plt.setp(a2.get_yticklabels(), visible=True)
+
+# a = plt.show()
 ```
 
 
     
-![png](output_75_0.png)
+![png](output_79_0.png)
     
 
 
-There is only one unofficial brand = Petkit, which has the most Payday campaigns.
+การเข้าร่วม campaign ทั้ง 3 สามารถบอกได้ดังนี้
+- Payday ที่การทำ Flash sale สูงที่สุดเนื่องจากมีจำนวนวันในการทำและมีระยะเวลาในการทำสูงที่สุด (ข้อ 4)
+- แบรนด์ที่การเข้าร่วม campaign คือ Petkit รองลงมาคือ Amazfit และ Xiaomi
+- ร้านค้าที่ไม่เป็น official mall จะมีการเข้าร่วมเพียงหนึ่งแบรนด์ คือ Petkit และ ทำ flash sale ใน pay day เยอะที่สุด
 
-# Relationship between discount and sales
+ร้านค้าส่วนใหญ่ที่เข้าร่วมทั้ง 3 campaign จะเป็น official mall และ pay day จะมีการทำ flash sale สูงที่สุด
+
+# 7. Relationship between discount and sales
+ความสัมพันธ์ของการลดราคากับจำนวนสินค้าที่ขายได้
 
 
 ```python
@@ -2978,9 +2355,11 @@ plt.ylabel('Number of product sales', fontsize=15)
 
 
     
-![png](output_85_1.png)
+![png](output_89_1.png)
     
 
+
+ตัด outliner ที่เป็นข้อมูลที่ไม่มีความสำคัญออก เพื่อให้สามารถขยายกราฟให้ใหญ่มากขึ้นได้
 
 
 ```python
@@ -3000,26 +2379,24 @@ _ = plt.xticks(range(0,25,1))
 
 
     
-![png](output_87_0.png)
+![png](output_92_0.png)
     
 
 
-The % of discount in the range of 8-10% affects the sales of the product, causing the product to sell 2-3 times more than usual.
+ส่วนลดในช่วง 8-10% มีผลต่อยอดขายสินค้า ทำให้สินค้าขายได้มากกว่าปกติ 2-3 เท่า
+ส่วนลดเป็นเปอร์เซ็นต์ในช่วงอื่นไม่ได้มีผลกับจำนวนสินค้าที่ขายมากนัก
 
-The percentage discount on other range has not effect much on the number of products sold.
+# Summary
+
+1. วันที่ทำ flash sale บ่อยที่สุด 25 เที่ยงคืน 15 เที่ยงคืน
+2. แคมเปญที่ทำแฟลชเซลบ่อยที่สุดคือ PayDay
+3. วันและเวลาที่ทำแฟลชเซลบ่อยของ PayDay - 25-00, 30-12, 25-12, 27-12
+4. mega sale จะทำแฟลชเซลบ่อยกว่า mid month sale แต่จำนวนชั่วโมงในการแฟลชเซลน้อยกว่า mid month 
+5. PayDay นิยมทำแฟลชเซลในช่วงเวลากลางวัน 12, 18 ส่วน mega, mid month ทำแฟลชเซลคล้ายๆกัน นิยมทำในช่วงเวลากลางคืน 00:00-02:00
+6. official brand ส่วนมากจะนิยมทำแฟลชเซลในแคมเปญ Mega sale และ PayDay มากกว่า Midmonth
+7. ส่วนลด 8-10% มีผลกับยอดขายมากที่สุด
 
 
 ```python
 
 ```
-
-
-```python
-
-```
-
-
-```python
-
-```
-
