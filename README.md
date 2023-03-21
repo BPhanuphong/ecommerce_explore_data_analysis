@@ -396,6 +396,7 @@ Shopee มีทั้งหมด 3 แคมเปญหลักๆ ดัง
 # Understand and prepare Data Part
 
 itemid = id ของสินค้าใน 1 url สินค้า
+
 modelid = id ของตัวเลือกสินค้าใน itemid
 
 itemid มีได้หลาย modelid เพราะ 1 สินค้าสามารถมีได้หลายตัวเลือกสินค้า 
@@ -785,9 +786,6 @@ plt.ylabel('Count row of data', fontsize=15)
 
 
 
-    Text(0, 0.5, 'Count row of data')
-
-
 
 ![output_18_1](https://user-images.githubusercontent.com/113247700/226550878-4a295ca1-ed88-463b-a81d-418583a7384f.png)
 
@@ -976,11 +974,6 @@ plt.ylabel('count transaction of flash sale')
 
 
 
-
-    Text(0, 0.5, 'count transaction of flash sale')
-
-
-
 ![output_30_1](https://user-images.githubusercontent.com/113247700/226550835-19494da9-f8eb-45bc-a0d3-f535fe84998a.png)
 
 
@@ -1078,9 +1071,6 @@ plt.ylabel('Count transaction of flash sale', fontsize=15)
 
 
 
-    Text(0, 0.5, 'Count transaction of flash sale')
-
-
 
 ![output_38_1](https://user-images.githubusercontent.com/113247700/226550753-d90c8605-0057-45dc-bca2-30398894b6d4.png)
 
@@ -1123,10 +1113,6 @@ plt.ylabel('Count transaction of flash sale', fontsize=15)
 
 
 
-    Text(0, 0.5, 'Count transaction of flash sale')
-
-
-
 ![output_42_1](https://user-images.githubusercontent.com/113247700/226550714-e670d7cf-2b41-4fde-a59e-ef6b31ec814a.png)
 
     
@@ -1163,9 +1149,6 @@ plt.ylabel('Count transaction of flash sale', fontsize=15)
 
 
 
-    Text(0, 0.5, 'Count transaction of flash sale')
-
-
 
 ![output_44_1](https://user-images.githubusercontent.com/113247700/226550680-cb6bc66c-0ace-4ceb-9720-ef8e86fca238.png)
 
@@ -1200,8 +1183,6 @@ plt.ylabel('Count transaction of flash sale', fontsize=15)
 
 
 
-
-    Text(0, 0.5, 'Count transaction of flash sale')
 
 
 ![output_46_1](https://user-images.githubusercontent.com/113247700/226550655-3b744d36-d635-48d0-9dee-a5af414f928f.png)
@@ -1292,8 +1273,6 @@ plt.ylabel('Duration time (Hours)', fontsize=15)
 
 
 
-    Text(0, 0.5, 'Duration time (Hours)')
-
 
 
 ![output_53_1](https://user-images.githubusercontent.com/113247700/226550631-fb8518c5-2357-414f-9709-55ed8e38b9da.png)
@@ -1357,7 +1336,7 @@ plt.ylabel('Number of transactions', fontsize=15)
 
 
 
-    Text(0, 0.5, 'Number of transactions')
+
 
 
 
@@ -1968,7 +1947,7 @@ a2.tick_params(axis='both', labelsize=15)
 
 
 
-![output_79_0](https://user-images.githubusercontent.com/113247700/226550121-09fdd931-5df7-4bb5-b834-78119d63b142.f)
+![output_79_0](https://user-images.githubusercontent.com/113247700/226550121-09fdd931-5df7-4bb5-b834-78119d63b142.png)
 
 
 การเข้าร่วม campaign ทั้ง 3 สามารถบอกได้ดังนี้
@@ -2016,19 +1995,6 @@ df[df['flash_sale'].notnull()][['modelid','ingest_date','stock','flash_sale','pr
 
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -2219,7 +2185,6 @@ plt.ylabel('Number of product sales', fontsize=15)
 
 
 
-    Text(0, 0.5, 'Number of product sales')
 
 
 
@@ -2260,10 +2225,10 @@ _ = plt.xticks(range(0,25,1))
 
 # Summary
 
-1. วันที่ทำ flash sale บ่อยที่สุด 25 เที่ยงคืน 15 เที่ยงคืน
+1. วันที่ทำ Flash Sale บ่อยที่สุด 25 เที่ยงคืน 15 เที่ยงคืน
 2. แคมเปญที่ทำแฟลชเซลบ่อยที่สุดคือ PayDay
 3. วันและเวลาที่ทำแฟลชเซลบ่อยของ PayDay - 25-00, 30-12, 25-12, 27-12
-4. mega sale จะทำแฟลชเซลบ่อยกว่า mid month sale แต่จำนวนชั่วโมงในการแฟลชเซลน้อยกว่า mid month 
-5. PayDay นิยมทำแฟลชเซลในช่วงเวลากลางวัน 12, 18 ส่วน mega, mid month ทำแฟลชเซลคล้ายๆกัน นิยมทำในช่วงเวลากลางคืน 00:00-02:00
-6. official brand ส่วนมากจะนิยมทำแฟลชเซลในแคมเปญ Mega sale และ PayDay มากกว่า Midmonth
+4. Mega sale จะทำแฟลชเซลบ่อยกว่า Midmonth Sale แต่จำนวนชั่วโมงในการแฟลชเซลน้อยกว่า Midmonth 
+5. PayDay นิยมทำแฟลชเซลในช่วงเวลากลางวัน 12, 18 ส่วน Mega, Midmonth ทำแฟลชเซลคล้ายๆกัน นิยมทำในช่วงเวลากลางคืน 00:00-02:00
+6. Official Brand ส่วนมากจะนิยมทำแฟลชเซลในแคมเปญ Mega sale และ PayDay มากกว่า Midmonth
 7. ส่วนลด 8-10% มีผลกับยอดขายมากที่สุด
